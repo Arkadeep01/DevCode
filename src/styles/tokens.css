@@ -1,0 +1,162 @@
+/* ============================================================
+   DevCode design tokens — the ONLY place colors, spacing,
+   radii and shadows are defined. Edit here, theme everywhere.
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+
+  --heading: #021b44;          /* heading text (was var(--navy)) */
+  --primary: #0066eb;          /* button / filled UI */
+  --primary-hover: #0052c2;
+  --link: #0066eb;             /* blue used as TEXT / icons / active states */
+  --section-dark: #021b44;     /* dark band sections (Daily challenge) */
+  --surface-hover: #f5f9ff;
+  --border-strong: #b9cdea;
+  --hero-filter: none;
+  --inset-hi: inset 0 0 0 transparent;
+
+
+  /* ---- Color: light theme (default) ---- */
+  --bg: #f1f7ff;
+  --surface: #ffffff;
+  --surface-alt: #eaf3fe;
+  --border: #d6e3f5;
+  --ink: #0b1f3f;
+  --navy: #021b44;
+  --muted: #51607a;
+  --blue: #0066eb;
+  --blue-hover: #0052c2;
+  --teal: #22b8cf;
+  --green: #4ade80;
+
+  /* ---- Color: supporting roles ---- */
+  --on-blue: #ffffff;
+  --on-primary: #ffffff;
+  --on-teal: #021b44;
+  --on-navy: #eaf2ff;
+  --navy-soft: #0a2a5e;
+  --blue-soft: rgba(0, 102, 235, 0.08);
+  --teal-soft: rgba(34, 184, 207, 0.12);
+  --green-soft: rgba(74, 222, 128, 0.16);
+  --danger: #c2324b;
+  --danger-soft: rgba(194, 50, 75, 0.1);
+  --warn: #9a6700;
+  --warn-soft: rgba(154, 103, 0, 0.12);
+  --success: #157f3d;
+  --success-soft: rgba(21, 127, 61, 0.12);
+  --code-bg: #081a38;
+  --code-ink: #dfe9ff;
+  --code-line: #14315e;
+  --nav-bg: rgba(241, 247, 255, 0.82);
+  --cta-bg: #0066eb;
+  --cta-accent: #a5f1ff;
+  --focus: #0066eb;
+  --overlay-navy: rgba(2, 27, 68, 0.55);
+  --scrim: rgba(11, 31, 63, 0.5);
+
+  /* ---- Spacing ---- */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 72px;
+  --space-4xl: 104px;
+
+  /* ---- Layout ---- */
+  --container: 1160px;
+  --container-narrow: 780px;
+  --header-height: 72px;
+
+  /* ---- Radii ---- */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 30px;
+  --radius-pill: 999px;
+
+  /* ---- Shadows (soft, layered) ---- */
+  --shadow-sm: 0 1px 2px rgba(11, 31, 63, 0.06), 0 2px 6px rgba(11, 31, 63, 0.05);
+  --shadow-md: 0 4px 12px rgba(11, 31, 63, 0.08), 0 12px 28px rgba(11, 31, 63, 0.07);
+  --shadow-lg: 0 10px 24px rgba(11, 31, 63, 0.1), 0 28px 60px rgba(11, 31, 63, 0.12);
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --dur-fast: 140ms;
+  --dur: 220ms;
+  --dur-slow: 380ms;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #061226;
+  --surface: #0b1c38;
+  --surface-alt: #0f2448;
+  --surface-hover: #12294f;
+  --border: #1b3560;
+  --border-strong: #2a4a7d;
+
+  --ink: #dbe6fa;              /* body text, slightly dimmed to avoid glare */
+  --heading: #f4f8ff;
+  --muted: #94a9cc;
+  --navy: #0a1c3c;
+  --section-dark: #040c1c;     /* deeper than the page so cards on it stand out */
+
+  --primary: #2f6fe0;
+  --primary-hover: #2a63c9;
+  --on-primary: #ffffff;       /* 4.7:1 on --primary, 5.6:1 on --primary-hover */
+  --blue: #4c9bff;
+  --blue-hover: #7ab3ff;
+  --link: #5aa5ff;
+  --teal: #2ad0e6;
+  --green: #4ade80;
+
+  --on-blue: #ffffff;
+  --on-teal: #04121f;
+  --on-navy: #eaf2ff;
+  --navy-soft: #0e2450;
+  --blue-soft: rgba(76, 155, 255, 0.12);
+  --teal-soft: rgba(42, 208, 230, 0.12);
+  --green-soft: rgba(74, 222, 128, 0.12);
+  --danger: #ff8fa3;
+  --danger-soft: rgba(255, 143, 163, 0.12);
+  --warn: #f0c15b;
+  --warn-soft: rgba(240, 193, 91, 0.12);
+  --success: #7ee2a8;
+  --success-soft: rgba(126, 226, 168, 0.12);
+
+  --code-bg: #040d1e;
+  --code-ink: #dce9ff;
+  --code-line: #16305a;
+  --nav-bg: rgba(6, 18, 38, 0.8);
+  --cta-bg: #0c2b66;           /* calm deep blue band instead of bright blue */
+  --cta-accent: #9fe6f5;
+  --focus: #6aaeff;
+  --overlay-navy: rgba(4, 12, 28, 0.78);
+  --scrim: rgba(2, 8, 20, 0.65);
+  --hero-filter: brightness(0.6) saturate(0.9);
+
+  /* Depth in dark = faint top highlight + soft shadow, not just black blur */
+  --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --shadow-sm: var(--inset-hi), 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: var(--inset-hi), 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: var(--inset-hi), 0 20px 56px rgba(0, 0, 0, 0.55);
+}
+
+/* Optional depth texture: must sit BEHIND content */
+[data-theme='dark'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;                 /* was 0, which painted over content */
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--ink) 2%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--ink) 2%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+}

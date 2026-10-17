@@ -1,0 +1,70 @@
+.topic-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.topic-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.topic-card__category {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.topic-card__bookmark {
+  font-size: var(--text-xs);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.65rem;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+
+.topic-card__bookmark:hover {
+  color: var(--link);
+  border-color: var(--link);
+}
+
+.topic-card__bookmark--on,
+.topic-card__bookmark--on:hover {
+  background: var(--blue-soft);
+  border-color: var(--link);
+  color: var(--link);
+}
+
+.topic-card__title {
+  font-size: var(--text-lg);
+}
+
+.topic-card__takeaway {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.topic-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.topic-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-2xs);
+}

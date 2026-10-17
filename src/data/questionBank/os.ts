@@ -1,0 +1,133 @@
+import type { Question } from '../../types/question';
+
+export const OS_QUESTIONS: Question[] = [
+  {
+    id: 'os-b1', category: 'os', categoryLabel: 'Operating Systems & Networks', difficulty: 'Beginner',
+    question: 'What is the primary difference between a Process and a Thread in modern operating systems?',
+    codeSnippet: null,
+    options: [
+      'A process has its own isolated virtual address space; threads within the same process share that address space, heap, and file descriptors but have their own stack',
+      'Threads run on separate physical CPUs while processes share a single core',
+      'Processes cannot run concurrently, whereas threads can',
+      'A thread has its own file descriptor table, whereas processes share one',
+    ],
+    correctIndex: 0,
+    explanation: 'A process is an execution unit with its own private virtual memory address space. Threads belong to a process and share its heap, global variables, and open files, but maintain their own call stacks and registers.',
+    focusArea: 'Focus Area: Process vs Thread Address Space Isolation',
+  },
+  {
+    id: 'os-b2', category: 'os', categoryLabel: 'Operating Systems & Networks', difficulty: 'Beginner',
+    question: 'In computer networking, which transport layer protocol provides reliable, ordered, error-checked data delivery?',
+    codeSnippet: null,
+    options: [
+      'TCP (Transmission Control Protocol)',
+      'UDP (User Datagram Protocol)',
+      'ICMP (Internet Control Message Protocol)',
+      'ARP (Address Resolution Protocol)',
+    ],
+    correctIndex: 0,
+    explanation: 'TCP is a connection-oriented protocol that guarantees packet delivery order, retransmits lost packets, and manages congestion. UDP is connectionless and does not guarantee delivery or ordering.',
+    focusArea: 'Focus Area: TCP vs UDP Transport Layer Characteristics',
+  },
+  {
+    id: 'os-b3', category: 'os', categoryLabel: 'Operating Systems & Networks', difficulty: 'Beginner',
+    question: 'What is Virtual Memory and what fundamental problem does it solve?',
+    codeSnippet: null,
+    options: [
+      'It provides each process with the illusion of a large, contiguous private address space while mapping addresses to physical RAM via page tables',
+      'It reserves a dedicated swap partition on disk that directly extends physical RAM clock speed',
+      'It translates 32-bit user binaries into 64-bit kernel instructions transparently at runtime',
+      'It pins every process working set into physical RAM so paging to disk is never required',
+    ],
+    correctIndex: 0,
+    explanation: 'Virtual memory maps virtual addresses used by programs to physical addresses in RAM (or swap space on disk) using hardware MMU and OS page tables. This provides memory protection, isolation, and efficient RAM utilization.',
+    focusArea: 'Focus Area: Virtual Memory Mapping & Paging',
+  },
+  {
+    id: 'os-i1', category: 'os', categoryLabel: 'Operating Systems & Networks', difficulty: 'Intermediate',
+    question: 'What primary memory region is strictly isolated per thread, whereas the heap memory is shared across all threads in the same process?',
+    codeSnippet: null,
+    options: [
+      'Call Stack (Local variables, return pointers, and function frames)',
+      'Thread-local heap arena that isolates malloc regions per thread while sharing file descriptors',
+      'Per-thread page-table root that gives each thread its own private virtual address space',
+      'Shared interrupt descriptor table that queues syscalls separately for each running thread',
+    ],
+    correctIndex: 0,
+    explanation: 'Each thread has a dedicated private Stack allocated to manage local variables and active function call frames. The Heap, global variables, and code segments are shared across all threads in the process.',
+    focusArea: 'Focus Area: Thread Stack Isolation vs Shared Process Heap',
+  },
+  {
+    id: 'os-i2', category: 'os', categoryLabel: 'Operating Systems & Networks', difficulty: 'Intermediate',
+    question: 'What are the four necessary conditions (Coffman conditions) that must hold simultaneously for a Deadlock to occur?',
+    codeSnippet: null,
+    options: [
+      'Mutual Exclusion, Hold and Wait, No Preemption, Circular Wait',
+      'Race Conditions, Context Switches, CPU Throttling, Memory Leaks',
+      'Thread Starvation, Priority Inversion, Cache Invalidation, Page Faults',
+      'Dirty Reads, Phantom Reads, Non-Repeatable Reads, Write Skew',
+    ],
+    correctIndex: 0,
+    explanation: 'The four Coffman conditions for deadlock are: 1) Mutual Exclusion (resources cannot be shared), 2) Hold and Wait (processes hold resources while waiting for others), 3) No Preemption (resources cannot be forcibly taken), and 4) Circular Wait.',
+    focusArea: 'Focus Area: Coffman Conditions for System Deadlock',
+  },
+  {
+    id: 'os-i3', category: 'os', categoryLabel: 'Operating Systems & Networks', difficulty: 'Intermediate',
+    question: 'What does the `epoll` I/O multiplexing syscall (Linux) provide over the legacy `select` or `poll` syscalls?',
+    codeSnippet: null,
+    options: [
+      'O(1) readiness notification scaling because the kernel returns only the file descriptors that had events, avoiding linear O(N) descriptor scans',
+      'It compresses network packets using gzip in the network card buffer',
+      'It executes asynchronous JavaScript promises directly in the kernel',
+      'It automatically encrypts socket traffic with TLS 1.3',
+    ],
+    correctIndex: 0,
+    explanation: 'select and poll scan through the entire registered descriptor set (O(N)) on every wake-up. epoll uses a red-black tree and ready-list in kernel space to return only active file descriptors, scaling efficiently (O(1)) with thousands of connections.',
+    focusArea: 'Focus Area: Linux epoll Event Readiness Scaling',
+  },
+  {
+    id: 'os-a1', category: 'os', categoryLabel: 'Operating Systems & Networks', difficulty: 'Advanced',
+    question: 'During TCP 3-Way Handshake establishment, what denial-of-service vulnerability occurs when an attacker floods SYN packets and never completes the final ACK?',
+    codeSnippet: null,
+    options: [
+      "SYN Flood Attack (exhausting the server's half-open connection backlog queue)",
+      'Slowloris Header Saturation',
+      'Smurf Amplification Loop',
+      'TCP RST Injection',
+    ],
+    correctIndex: 0,
+    explanation: "A SYN Flood floods the target with SYN packets and ignores SYN-ACK responses. This exhausts the server's SYN backlog queue memory. Operating systems mitigate this using SYN Cookies, encoding state into initial sequence numbers without allocating memory.",
+    focusArea: 'Focus Area: TCP Handshake Dynamics & SYN Cookie Mitigation',
+  },
+  {
+    id: 'os-a2', category: 'os', categoryLabel: 'Operating Systems & Networks', difficulty: 'Advanced',
+    question: "What causes 'False Sharing' in multi-threaded programs running on multi-core CPU architectures?",
+    codeSnippet: `struct Stats {
+    long counterA; // Core 1 writes here
+    long counterB; // Core 2 writes here (same 64-byte cache line!)
+};`,
+    options: [
+      'Independent variables modified by different threads reside on the same CPU cache line (typically 64 bytes), triggering continuous cache line invalidation and bus traffic',
+      'Threads sharing a file descriptor without mutex locking',
+      'Two threads attempting to bind to the same TCP port number',
+      'The operating system scheduler assigning two threads to different processes',
+    ],
+    correctIndex: 0,
+    explanation: "CPUs maintain cache coherency at the granularity of cache lines (64 bytes). When two cores write to different variables that share the same cache line, each write invalidates the other core's cache, degrading performance. Alignment padding resolves this.",
+    focusArea: 'Focus Area: CPU Cache Coherency & False Sharing',
+  },
+  {
+    id: 'os-a3', category: 'os', categoryLabel: 'Operating Systems & Networks', difficulty: 'Advanced',
+    question: 'What is the purpose of the TCP `TIME_WAIT` socket state, and why does it typically linger for 2MSL (Maximum Segment Lifetime)?',
+    codeSnippet: null,
+    options: [
+      'To ensure the final ACK was received by the remote endpoint (allowing retransmission of FIN if needed) and prevent delayed duplicate packets from confusing new connections',
+      'To keep the socket buffer pinned in RAM while the OS defragments freed packet memory',
+      'To pause the connection until DNS TTLs expire and the peer hostname re-resolves correctly',
+      'To rate-limit the sender with exponential backoff before permitting a new connection',
+    ],
+    correctIndex: 0,
+    explanation: 'The endpoint initiating a clean active close enters TIME_WAIT for 2MSL (typically 60-120 seconds). This guarantees that its final ACK reached the peer (or allows resending ACK if the peer re-sends FIN) and prevents stray delayed packets from corrupting subsequent connections.',
+    focusArea: 'Focus Area: TCP TIME_WAIT State & 2MSL Lifetime',
+  },
+];

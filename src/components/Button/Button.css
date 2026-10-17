@@ -1,0 +1,109 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform var(--dur) var(--ease), background var(--dur) var(--ease),
+    color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+
+.btn--sm {
+  padding: 0.4rem 0.9rem;
+  font-size: var(--text-sm);
+}
+
+.btn--md {
+  padding: 0.65rem 1.35rem;
+  font-size: var(--text-md);
+}
+
+.btn--lg {
+  padding: 0.85rem 1.75rem;
+  font-size: var(--text-lg);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  border-color: var(--link);
+  color: var(--link);
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--link);
+  border-color: var(--link);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn--teal {
+  background: var(--teal);
+  color: var(--on-teal);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--teal:hover:not(:disabled) {
+  box-shadow: var(--shadow-md);
+  filter: brightness(1.05);
+}
+
+.btn--white {
+  background: var(--on-navy);
+  color: var(--navy);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--white:hover:not(:disabled) {
+  box-shadow: var(--shadow-md);
+}
+
+.btn--subtle {
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+.btn--subtle:hover:not(:disabled) {
+  border-color: var(--link);
+  color: var(--link);
+}

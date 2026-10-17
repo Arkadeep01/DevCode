@@ -1,0 +1,55 @@
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.18rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.tag--category {
+  background: var(--blue-soft);
+  color: var(--link);
+  border-color: color-mix(in srgb, var(--link) 24%, transparent);
+}
+
+.tag--difficulty {
+  background: var(--surface-alt);
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+.tag--info {
+  background: var(--teal-soft);
+  color: var(--teal);
+  border-color: color-mix(in srgb, var(--teal) 30%, transparent);
+}
+
+.tag--success {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.tag--danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
+.tag--warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 32%, transparent);
+}
+
+.tag--flag {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-color: var(--warn);
+}
