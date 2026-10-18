@@ -90,6 +90,15 @@ npm run db:studio      # inspect the SQLite database
 
 Run both dev servers side by side: the SPA on `:3000` reads `VITE_API_BASE_URL` (default `http://localhost:4000/api`).
 
+## API endpoints
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | — | Service status + SQLite ping |
+| `POST` | `/api/auth/register` | — | Create an account (`email`, `password`, `displayName`) → `{ token, user }` |
+| `POST` | `/api/auth/login` | — | Email + password → `{ token, user }` |
+| `GET` | `/api/auth/me` | Bearer | Current user from the JWT |
+
 ## Environment variables
 
 Templates: `.env.example` at the root (frontend) and `server/.env.example` (API). Copy each to `.env` beside it. Real `.env*` files are gitignored; only the `.example` templates are committed.

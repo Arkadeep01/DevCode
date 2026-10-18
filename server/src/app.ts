@@ -3,6 +3,7 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import helmet from 'helmet';
 import { allowedOrigins, env } from './config/env.js';
 import { sqlite } from './db/client.js';
+import { authRouter } from './routes/auth.js';
 
 /**
  * Builds the Express application without binding a port, so tests can import
@@ -26,6 +27,8 @@ export function createApp() {
       db: ping?.ok === 1 ? 'ok' : 'unexpected',
     });
   });
+
+  app.use('/api/auth', authRouter);
 
   // Unknown route.
   app.use((_req, res) => {
