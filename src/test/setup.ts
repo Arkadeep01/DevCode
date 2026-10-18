@@ -16,3 +16,10 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
       }) as unknown as MediaQueryList,
   });
 }
+
+// jsdom logs "Not implemented: window.scrollTo" without a stub; scroll
+// behavior is asserted through this mock in tests that care about it.
+if (typeof window !== 'undefined') {
+  const scrollTo = vi.fn();
+  Object.defineProperty(window, 'scrollTo', { writable: true, value: scrollTo });
+}

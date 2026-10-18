@@ -1,17 +1,21 @@
-import { useEffect, useLayoutEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useLocation, useNavigationType } from 'react-router-dom';
 import { scrollToSection, waitForFontsAndFrame } from '../../utils/scrollToSection';
 
 interface ScrollTargetState {
   scrollTo?: string;
 }
 
-function scrollToTop() {
+function scrollToY(top: number) {
   try {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    window.scrollTo({ top, left: 0, behavior: 'instant' });
   } catch {
-    window.scrollTo(0, 0);
+    window.scrollTo(0, top);
   }
+}
+
+function scrollToTop() {
+  scrollToY(0);
 }
 
 function focusMainHeading() {
@@ -25,6 +29,9 @@ function focusMainHeading() {
  */
 export function ScrollManager() {
   const location = useLocation();
+  const navigationType = useNavigationType();
+  const positions = useRef(new Map<string, number>());
+  const lastKey = useRef(location.key);
 
   useEffect(() => {
     if (!('scrollRestoration' in window.history)) return;
@@ -38,6 +45,26 @@ export function ScrollManager() {
   useLayoutEffect(() => {
     let cancelled = false;
     let frame = 0;
+
+    if (lastKey.current !== location.key) {
+      positions.current.set(lastKey.current, window.scrollY);
+      lastKey.current = location.key;
+    }
+
+    if (navigationType === 'POP') {
+      const restored = positions.current.get(location.key) ?? 0;
+      scrollToY(restored);
+      frame = requestAnimationFrame(() => {
+        if (cancelled) return;
+        scrollToY(restored);
+        focusMainHeading();
+      });
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(frame);
+      };
+    }
+
     const state = location.state as ScrollTargetState | null;
     const target = state?.scrollTo;
 
@@ -62,7 +89,7 @@ export function ScrollManager() {
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [location.pathname, location.search, location.state]);
+  }, [location.key, location.pathname, location.search, location.state, navigationType]);
 
   return null;
 }

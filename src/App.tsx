@@ -1,9 +1,10 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { Footer } from './components/Footer/Footer';
 import { Navbar } from './components/Navbar/Navbar';
 import { ScrollManager } from './components/ScrollManager/ScrollManager';
 import { ToastProvider } from './components/Toast/ToastProvider';
 import { HomePage } from './pages/Home/HomePage';
+import { NotFoundPage } from './pages/NotFound/NotFoundPage';
 import { PracticePage } from './pages/Practice/PracticePage';
 import { StudyPage } from './pages/Study/StudyPage';
 import { ROUTES } from './routes';
@@ -19,7 +20,7 @@ export function App() {
           <Route path={ROUTES.home} element={<HomePage />} />
           <Route path={ROUTES.study} element={<StudyPage />} />
           <Route path={ROUTES.practice} element={<PracticePage />} />
-          <Route path="*" element={<Navigate to={ROUTES.home} replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       <Footer />
