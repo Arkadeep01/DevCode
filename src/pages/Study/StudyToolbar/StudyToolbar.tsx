@@ -5,8 +5,8 @@ import './StudyToolbar.css';
 const TAG_FILTERS: { value: TagFilter; label: string }[] = [
   { value: 'all', label: 'All flags' },
   { value: 'high_freq', label: 'High frequency' },
-  { value: 'company_fav', label: 'Company favorites' },
-  { value: 'core', label: 'Core concepts' },
+  { value: 'company_fav', label: 'Company favorite' },
+  { value: 'core', label: 'Core concept' },
 ];
 
 interface StudyToolbarProps {

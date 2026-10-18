@@ -76,7 +76,7 @@ export const MUST_KNOW_TOPICS: StudyTopic[] = [
     categoryLabel: 'Must-Know Interview Questions',
     title: "Deadlock: Coffman Conditions & Banker's Prevention",
     frequency: 'High Frequency',
-    tags: ['high_freq', 'company_fav'],
+    tags: ['company_fav'],
     difficulty: 'Hard',
     takeaway:
       'A deadlock occurs when processes are unable to proceed because each holds a resource while waiting for another held resource. It requires all 4 Coffman conditions; breaking any single condition prevents deadlock.',
@@ -112,7 +112,7 @@ void transfer_safe(Account& from, Account& to, double amt) {
     categoryLabel: 'Must-Know Interview Questions',
     title: 'Database Indexing: B-Trees vs Hash Indexes',
     frequency: 'High Frequency',
-    tags: ['high_freq', 'core'],
+    tags: ['core'],
     difficulty: 'Medium',
     takeaway:
       'B-Trees keep keys sorted, making them the standard engine index for point queries (O(log N)), range scans (`BETWEEN`), and sorting (`ORDER BY`), while Hash indexes provide O(1) equality lookup but fail on range queries.',

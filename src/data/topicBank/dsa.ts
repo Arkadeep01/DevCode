@@ -139,7 +139,7 @@ ListNode* detectCycle(ListNode *head) {
     categoryLabel: 'Core DSA Patterns',
     title: 'Binary Search on Answer Space (Monotonic Predicate)',
     frequency: 'High Frequency',
-    tags: ['high_freq', 'company_fav'],
+    tags: ['company_fav'],
     difficulty: 'Medium - Hard',
     takeaway:
       'When direct optimization is complex but checking whether a candidate answer is feasible runs in O(N) time, binary search over the range [min_ans, max_ans] solves the problem in O(N * log(Range)).',

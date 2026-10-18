@@ -84,7 +84,7 @@ COMMIT;`,
     categoryLabel: 'Database & System Fundamentals',
     title: 'API Architectures: REST vs GraphQL vs gRPC',
     frequency: 'High Frequency',
-    tags: ['high_freq', 'company_fav'],
+    tags: ['company_fav'],
     difficulty: 'Medium',
     takeaway:
       'REST is the de facto HTTP/JSON CRUD standard; GraphQL eliminates over/under-fetching for complex frontend clients; gRPC uses HTTP/2 and Protocol Buffers for high-throughput, low-latency microservice RPCs.',

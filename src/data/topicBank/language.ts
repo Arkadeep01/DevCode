@@ -7,7 +7,7 @@ export const LANGUAGE_TOPICS: StudyTopic[] = [
     categoryLabel: 'Language Masterclass',
     title: 'Shallow Copy vs Deep Copy (Python / C++ / Java)',
     frequency: 'High Frequency',
-    tags: ['high_freq', 'company_fav'],
+    tags: ['company_fav'],
     difficulty: 'Medium',
     takeaway:
       'A shallow copy duplicates the parent object but copies references to nested child objects; a deep copy recursively constructs new objects and duplicates all nested elements independently.',
@@ -93,7 +93,7 @@ class Dog extends Animal {
     categoryLabel: 'Language Masterclass',
     title: 'Memory: Pointers vs References & Smart Pointers',
     frequency: 'High Frequency',
-    tags: ['high_freq', 'company_fav'],
+    tags: ['company_fav'],
     difficulty: 'Medium - Hard',
     takeaway:
       'A pointer stores a mutable memory address and can be null or re-seated; a reference is an immutable alias bound to an existing object at initialization that cannot be null or re-assigned.',
@@ -130,7 +130,7 @@ void demonstrate_smart_pointers() {
     categoryLabel: 'Language Masterclass',
     title: 'Java Garbage Collection & Generational Heap Model',
     frequency: 'High Frequency',
-    tags: ['high_freq', 'core'],
+    tags: ['core'],
     difficulty: 'Medium - Hard',
     takeaway:
       'JVM divides heap memory into Young Generation (Eden, S0, S1) and Old/Tenured Generation based on the Weak Generational Hypothesis: most objects die shortly after allocation.',
