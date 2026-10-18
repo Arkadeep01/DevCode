@@ -13,10 +13,11 @@ build/
 
 # SQLite database files (Drizzle migrations are committed, data files are not)
 *.db
-*.db-journal
+*.db-*
 *.sqlite
 *.sqlite3
-*.sqlite-journal
+*.sqlite-*
+server/data/
 
 # Logs
 *.log

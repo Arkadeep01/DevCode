@@ -9,17 +9,29 @@ The project is being extended into a full-stack app: an Express + TypeScript API
 | Layer | Technology |
 | --- | --- |
 | Frontend (current) | React 19, TypeScript 5.8, Vite 6, React Router 7, plain CSS + design tokens |
-| Backend (next phases) | Node.js, Express, TypeScript, Zod validation, JWT auth with bcrypt |
-| Database (next phases) | SQLite via Drizzle ORM (migrations committed as SQL) |
-| Tooling | npm, strict TypeScript; ESLint + Prettier added in the configuration phase |
+| Backend | Node.js, Express, TypeScript, Zod-validated config; JWT auth with bcrypt lands in the schema phase |
+| Database | SQLite via Drizzle ORM (migrations committed as SQL; tables land in the schema phase) |
+| Tooling | npm, strict TypeScript, ESLint (flat config), Prettier |
 
 ## Repository layout
 
-The Vite app lives at the repository root. The API will live in a single `server/` folder, added in the next phase together with its first real files — there is no separate `frontend/` / `backend/` split:
+The Vite app lives at the repository root. The API lives in a single `server/` folder with its own `package.json` — there is no separate `frontend/` / `backend/` split:
 
 ```
 .                 Vite root: index.html, src/, public/, vite.config.ts, tsconfig.json
-server/           (planned) Express API: routes, auth, Drizzle schema + migrations
+server/           Express API: bootstrap, config, Drizzle client + schema, migrations
+```
+
+### Server folder map
+
+```
+server/
+  src/config/env.ts   Zod-validated environment (fails fast at boot)
+  src/db/client.ts    better-sqlite3 connection (WAL, foreign keys)
+  src/db/schema.ts    Drizzle schema (tables land in the schema phase)
+  src/app.ts          Express app: helmet, CORS, /api/health, JSON errors
+  src/index.ts        bootstrap + graceful shutdown
+  drizzle.config.ts   drizzle-kit config (SQLite, migrations in drizzle/)
 ```
 
 ### Frontend folder map
@@ -46,22 +58,53 @@ src/
 
 Pages never import each other; shared UI lives in `components/`, data in `data/`.
 
-## How to run (frontend)
+## How to run
+
+### Frontend (repository root)
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
-npm run build    # tsc --noEmit && vite build
-npm run preview  # serve the production build
+npm run dev        # http://localhost:3000
+npm run build      # tsc --noEmit && vite build
+npm run preview    # serve the production build
+npm run typecheck  # tsc --noEmit
+npm run lint       # eslint .
+npm run format     # prettier --write .
 ```
 
-`npm run lint` is an alias for the TypeScript check (`tsc --noEmit`).
+### API (`server/`)
 
-Backend install/run commands will be documented here once `server/` is scaffolded.
+```bash
+cd server
+npm install
+cp .env.example .env   # then adjust values if needed
+npm run dev            # tsx watch -> http://localhost:4000/api/health
+npm run build          # tsc -> dist/
+npm run start          # node dist/index.js
+npm run typecheck      # tsc --noEmit
+npm run lint           # eslint src
+npm run db:generate    # drizzle-kit generate (after schema changes)
+npm run db:migrate     # apply migrations
+npm run db:studio      # inspect the SQLite database
+```
+
+Run both dev servers side by side: the SPA on `:3000` reads `VITE_API_BASE_URL` (default `http://localhost:4000/api`).
 
 ## Environment variables
 
-Nothing is required to run the frontend today. Environment templates (`*.env.example`) and the server-side variables they feed (JWT secret, database file path, ports) will be added in the configuration phase. Real `.env*` files are gitignored; only the `.example` templates are committed.
+Templates: `.env.example` at the root (frontend) and `server/.env.example` (API). Copy each to `.env` beside it. Real `.env*` files are gitignored; only the `.example` templates are committed.
+
+| Variable | Where | Default | Purpose |
+| --- | --- | --- | --- |
+| `VITE_API_BASE_URL` | frontend | `http://localhost:4000/api` | Base URL the SPA calls |
+| `NODE_ENV` | server | `development` | `development` / `test` / `production` |
+| `PORT` | server | `4000` | API listen port |
+| `CORS_ORIGIN` | server | `http://localhost:3000` | Comma-separated allowed browser origins |
+| `DATABASE_URL` | server | `./data/devcode.sqlite` | SQLite file (relative to `server/`), auto-created on boot |
+| `JWT_SECRET` | server | — (required) | JWT signing secret, min 16 chars |
+| `JWT_EXPIRES_IN` | server | `7d` | Token lifetime |
+
+The server validates all of the above with Zod at boot and exits with a readable message when something is missing.
 
 ## Editing
 
@@ -93,8 +136,8 @@ Each hand-written file is kept under ~200 lines; when a bank grows, add a new fi
 
 ## Project phases (isolated commits)
 
-1. **Structure & docs** (this commit) — `.gitignore`, `README.md`. No folders are created until they are actually required.
-2. **Environment & config** — `.env.example` templates, ESLint/Prettier, server TypeScript + Drizzle configuration under `server/`.
+1. **Structure & docs** _(done)_ — `.gitignore`, `README.md`. No folders are created until they are actually required.
+2. **Environment & config** _(done)_ — `.env.example` templates, ESLint/Prettier, server TypeScript + Drizzle configuration under `server/`.
 3. **Schema & auth** — SQLite schema/migrations for users, questions, submissions, and progress; signup/login routes with JWT; frontend auth views.
 4. **Features, one task per commit** — question bank & practice API/UI, code editor integration, feedback/evaluation, dashboard & analytics.
 
