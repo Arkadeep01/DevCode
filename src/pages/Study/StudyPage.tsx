@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Button } from '../../components/Button/Button';
 import { Eyebrow } from '../../components/Eyebrow/Eyebrow';
 import { useToast } from '../../components/Toast/ToastContext';
@@ -32,6 +32,8 @@ export function StudyPage() {
     setTag('all');
     setQuery('');
   };
+
+  const closeDetail = useCallback(() => setSelected(null), []);
 
   return (
     <div className="study">
@@ -92,7 +94,7 @@ export function StudyPage() {
           bookmarked={bookmarks.has(selected.id)}
           onToggleMastered={() => handleToggleMastered(selected)}
           onToggleBookmark={() => handleToggleBookmark(selected)}
-          onClose={() => setSelected(null)}
+          onClose={closeDetail}
         />
       ) : null}
     </div>

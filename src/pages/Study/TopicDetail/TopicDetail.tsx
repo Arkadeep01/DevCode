@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Button } from '../../../components/Button/Button';
 import { CodeBlock } from '../../../components/CodeBlock/CodeBlock';
 import { Tag } from '../../../components/Tag/Tag';
+import { getFocusableElements, inertBackground } from '../../../utils/dialogFocus';
 import { sanitizeRichText } from '../../../utils/sanitizeRichText';
 import type { StudyTopic } from '../../../types/topic';
 import { TAG_META } from '../TopicCard/TopicCard';
@@ -25,29 +27,72 @@ export function TopicDetail({
   onClose,
 }: TopicDetailProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
 
   useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
     closeRef.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
+
+    const overlay = overlayRef.current;
+    const restoreBackground = overlay ? inertBackground(overlay) : () => undefined;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onCloseRef.current();
+    };
+    document.addEventListener('keydown', onKeyDown);
+
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = previousOverflow;
+      restoreBackground();
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
     };
-  }, [onClose]);
+  }, []);
+
+  const handleTabTrap = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Tab') return;
+
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const focusables = getFocusableElements(panel);
+    if (focusables.length === 0) return;
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+
+    if (event.shiftKey) {
+      if (active === first || !panel.contains(active)) {
+        event.preventDefault();
+        last.focus();
+      }
+    } else if (active === last || !panel.contains(active)) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   return (
-    <div className="topic-detail" onClick={onClose}>
+    <div className="topic-detail" ref={overlayRef} onClick={onClose}>
       <div
+        ref={panelRef}
         className="topic-detail__panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="topic-detail-title"
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={handleTabTrap}
       >
         <div className="topic-detail__top">
           <div className="topic-detail__tags">
