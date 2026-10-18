@@ -8,13 +8,13 @@ import { computeResult } from './computeResult';
 
 const SECONDS_PER_QUESTION = 90;
 
-function toSessionQuestion(question: Question | SessionQuestion): SessionQuestion {
+export function toSessionQuestion(question: Question | SessionQuestion): SessionQuestion {
   const correctOption = question.options[question.correctIndex];
   const options = shuffle(question.options);
   return { ...question, options, correctIndex: options.indexOf(correctOption) };
 }
 
-function buildSession(config: PracticeConfig): SessionQuestion[] {
+export function buildSession(config: PracticeConfig): SessionQuestion[] {
   const pool = QUESTIONS.filter(
     (question) =>
       config.tracks.includes(question.category) &&
