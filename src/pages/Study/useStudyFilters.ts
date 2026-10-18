@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { STUDY_TOPICS } from '../../data/studyTopics';
 import type { StudyTopic, TopicCategory, TopicTag } from '../../types/topic';
@@ -12,19 +12,52 @@ function isCategory(value: string | null): value is TopicCategory {
   return value !== null && (CATEGORIES as string[]).includes(value);
 }
 
-export function useStudyFilters() {
-  const [searchParams] = useSearchParams();
-  const fromUrl = searchParams.get('category');
+function readCategory(value: string | null): CategoryFilter {
+  return isCategory(value) ? value : 'all';
+}
 
-  const [category, setCategory] = useState<CategoryFilter>(
-    isCategory(fromUrl) ? fromUrl : 'all',
+export function useStudyFilters() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // The URL is the single source of truth for the category, so a refresh (or a
+  // deep link) always restores exactly what the UI shows.
+  const rawCategory = searchParams.get('category');
+  const category = readCategory(rawCategory);
+
+  // Normalize a stale or invalid ?category=... so the URL never lies.
+  useEffect(() => {
+    if (rawCategory === null || isCategory(rawCategory)) return;
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete('category');
+        return next;
+      },
+      { replace: true },
+    );
+  }, [rawCategory, setSearchParams]);
+
+  // Replace instead of push: picking filters should not stack history entries.
+  const setCategory = useCallback(
+    (next: CategoryFilter) => {
+      setSearchParams(
+        (current) => {
+          const params = new URLSearchParams(current);
+          if (next === 'all') {
+            params.delete('category');
+          } else {
+            params.set('category', next);
+          }
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
   );
+
   const [tag, setTag] = useState<TagFilter>('all');
   const [query, setQuery] = useState('');
-
-  useEffect(() => {
-    if (isCategory(fromUrl)) setCategory(fromUrl);
-  }, [fromUrl]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
