@@ -13,13 +13,16 @@ const DIFFICULTIES: DifficultyMode[] = ['Beginner', 'Intermediate', 'Advanced', 
 
 interface SetupScreenProps {
   onStart: (config: PracticeConfig) => void;
+  initialConfig?: PracticeConfig | null;
 }
 
-export function SetupScreen({ onStart }: SetupScreenProps) {
-  const [tracks, setTracks] = useState<Set<QuestionCategory>>(new Set());
-  const [difficulty, setDifficulty] = useState<DifficultyMode>('Mixed');
-  const [count, setCount] = useState(5);
-  const [untimed, setUntimed] = useState(false);
+export function SetupScreen({ onStart, initialConfig = null }: SetupScreenProps) {
+  const [tracks, setTracks] = useState<Set<QuestionCategory>>(
+    () => new Set(initialConfig?.tracks ?? []),
+  );
+  const [difficulty, setDifficulty] = useState<DifficultyMode>(initialConfig?.difficulty ?? 'Mixed');
+  const [count, setCount] = useState(initialConfig?.count ?? 5);
+  const [untimed, setUntimed] = useState(initialConfig?.untimed ?? false);
   const [attempts, setAttempts] = useState<QuizAttempt[]>(() => readQuizHistory().slice(0, 5));
   const toast = useToast();
 

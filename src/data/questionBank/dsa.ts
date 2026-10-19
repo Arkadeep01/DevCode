@@ -48,6 +48,48 @@ export const DSA_QUESTIONS: Question[] = [
     focusArea: 'Focus Area: Binary Search Logarithmic Divide-and-Conquer',
   },
   {
+    id: 'dsa-b5', category: 'dsa', categoryLabel: 'Data Structures & Algorithms', difficulty: 'Beginner',
+    question: 'What is the time complexity of the one-pass hash map solution to the Two Sum problem, which stores each value with its index while scanning the array?',
+    codeSnippet: null,
+    options: [
+      'O(N) — one scan with constant-time map lookups',
+      'O(N log N) — a sort followed by one scan',
+      'O(N²) — a nested loop over every pair',
+      'O(1) — the map resolves every sum directly',
+    ],
+    correctIndex: 0,
+    explanation: 'The array is scanned once; for each element the map answers "have I already seen the complement?" in O(1) average time, so the whole pass runs in O(N) time with O(N) extra space.',
+    focusArea: 'Focus Area: Two Sum Hash Map Linear Scan',
+  },
+  {
+    id: 'dsa-b6', category: 'dsa', categoryLabel: 'Data Structures & Algorithms', difficulty: 'Beginner',
+    question: 'Why can a hash map find the Two Sum pair in a single pass instead of checking every possible pair?',
+    codeSnippet: null,
+    options: [
+      'It remembers seen values so each complement lookup is instant',
+      'It sorts the values first so the pair sits next to each other',
+      'It precomputes every possible pair sum before the scan starts',
+      'It skips all duplicate values while scanning through the array',
+    ],
+    correctIndex: 0,
+    explanation: 'Storing each seen value (with its index) lets the scan request the exact complement in O(1) average time, replacing the O(N²) all-pairs check with a single linear pass.',
+    focusArea: 'Focus Area: Two Sum Complement Lookup Strategy',
+  },
+  {
+    id: 'dsa-b7', category: 'dsa', categoryLabel: 'Data Structures & Algorithms', difficulty: 'Beginner',
+    question: 'In the one-pass Two Sum hash map, what is stored as the keys and what is stored as the values?',
+    codeSnippet: null,
+    options: [
+      'Keys are array values; values are their indices',
+      'Keys are their indices; values are array values',
+      'Keys are complements; values are their indices',
+      'Keys are target sums; values are array values',
+    ],
+    correctIndex: 0,
+    explanation: 'The map answers "which index holds the value I still need?", so each array value is the key and its position is the value. Finding the complement completes the index pair.',
+    focusArea: 'Focus Area: Two Sum Map Key-Value Roles',
+  },
+  {
     id: 'dsa-i1', category: 'dsa', categoryLabel: 'Data Structures & Algorithms', difficulty: 'Intermediate',
     question: 'What is the amortized time complexity of inserting a key into an LRU Cache of capacity N implemented with a Hash Map and Doubly Linked List?',
     codeSnippet: `class LRUCache {

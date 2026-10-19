@@ -1,11 +1,17 @@
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
 import { QuizScreen } from './QuizScreen/QuizScreen';
 import { ResultsScreen } from './ResultsScreen/ResultsScreen';
 import { SetupScreen } from './SetupScreen/SetupScreen';
+import { availableCount, parseSetupParams } from './setupParams';
 import { usePracticeSession } from './usePracticeSession';
 import './PracticePage.css';
 
 export function PracticePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [setup] = useState(() => parseSetupParams(searchParams));
+  const autostartConsumed = useRef(false);
   const {
     phase,
     result,
@@ -29,6 +35,25 @@ export function PracticePage() {
     newQuiz,
   } = usePracticeSession();
 
+  useEffect(() => {
+    if (phase !== 'setup' || autostartConsumed.current) return;
+    autostartConsumed.current = true;
+    if (!setup.autostart) return;
+
+    if (searchParams.has('autostart')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('autostart');
+      setSearchParams(next, { replace: true });
+    }
+
+    if (recoverable) return;
+
+    const { tracks, difficulty, count, untimed } = setup.config;
+    if (tracks.length > 0 && availableCount(tracks, difficulty) > 0) {
+      start({ tracks, difficulty, count, untimed });
+    }
+  }, [phase, recoverable, setup, searchParams, setSearchParams, start]);
+
   if (phase === 'setup') {
     return (
       <>
@@ -51,7 +76,7 @@ export function PracticePage() {
             </div>
           </div>
         ) : null}
-        <SetupScreen onStart={start} />
+        <SetupScreen onStart={start} initialConfig={setup.config} />
       </>
     );
   }

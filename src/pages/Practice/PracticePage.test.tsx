@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ToastProvider } from '../../components/Toast/ToastProvider';
 import { SESSION_KEYS } from '../../utils/storage';
 import { PracticePage } from './PracticePage';
@@ -37,11 +38,19 @@ function seedDraft() {
   );
 }
 
-function renderPage() {
+function LocationProbe() {
+  const location = useLocation();
+  return <div data-testid="location">{location.pathname + location.search}</div>;
+}
+
+function renderPage(path = '/practice') {
   render(
-    <ToastProvider>
-      <PracticePage />
-    </ToastProvider>
+    <MemoryRouter initialEntries={[path]}>
+      <ToastProvider>
+        <PracticePage />
+        <LocationProbe />
+      </ToastProvider>
+    </MemoryRouter>
   );
 }
 
@@ -73,5 +82,36 @@ describe('practice session recovery', () => {
     renderPage();
 
     expect(screen.queryByText(/unfinished quiz/i)).toBeNull();
+  });
+});
+
+describe('practice autostart', () => {
+  it('starts the quiz from query params and strips the autostart flag', () => {
+    renderPage('/practice?track=dsa&difficulty=Beginner&count=5&autostart=1');
+
+    expect(screen.getByText(/Question 1 of 5/)).toBeTruthy();
+    expect(screen.getByTestId('location').textContent).toBe(
+      '/practice?track=dsa&difficulty=Beginner&count=5'
+    );
+  });
+
+  it('prefills the setup form but does not start over a saved draft', () => {
+    seedDraft();
+    renderPage('/practice?track=dsa&difficulty=Beginner&count=5&autostart=1');
+
+    expect(screen.getByText(/unfinished quiz/i)).toBeTruthy();
+    expect(screen.queryByText(/Question 1 of 5/)).toBeNull();
+    expect(screen.getByTestId('location').textContent).toBe(
+      '/practice?track=dsa&difficulty=Beginner&count=5'
+    );
+    const difficulty = screen.getByRole('button', { name: 'Beginner' });
+    expect(difficulty.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('ignores unknown params and stays on the setup screen', () => {
+    renderPage('/practice?track=ufology&difficulty=Expert&count=wat&autostart=1');
+
+    expect(screen.getByText('Set up your run.')).toBeTruthy();
+    expect(screen.queryByText(/Question 1 of/)).toBeNull();
   });
 });

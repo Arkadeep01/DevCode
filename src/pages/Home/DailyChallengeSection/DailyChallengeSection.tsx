@@ -27,8 +27,11 @@ export function DailyChallengeSection() {
             </div>
             <h3 className="daily__title">{challenge.title}</h3>
             <p className="daily__text">{challenge.description}</p>
-            <Button variant="primary" to={ROUTES.practice}>
-              Solve the challenge &#8599;
+            <Button
+              variant="primary"
+              to={`${ROUTES.practice}?track=dsa&difficulty=Beginner&count=5&autostart=1`}
+            >
+              Start the 5-question warm-up &#8599;
             </Button>
           </div>
           <CodeBlock

@@ -16,7 +16,7 @@ export const DAILY_CHALLENGE: DailyChallenge = {
   difficulty: 'Easy',
   title: 'Two Sum',
   description:
-    'Given an array of integers nums and an integer target, return indices of the two numbers that add up to target.',
+    'Given an array of integers nums and an integer target, return indices of the two numbers that add up to target. Warm up with the five-question DSA quiz below, then finish the function.',
   codeLang: 'javascript',
   code: `function twoSum(nums, target) {
   const seen = new Map();
