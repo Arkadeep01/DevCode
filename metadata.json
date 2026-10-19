@@ -1,6 +1,4 @@
 {
   "name": "DevCode",
-  "description": "DevCode — React + TypeScript interview prep hub with study paths and an assessment engine.",
-  "requestFramePermissions": [],
-  "majorCapabilities": []
+  "description": "DevCode — React + TypeScript interview prep hub with study paths and an assessment engine."
 }
