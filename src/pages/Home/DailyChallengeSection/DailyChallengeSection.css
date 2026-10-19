@@ -57,7 +57,8 @@
 }
 
 .daily__text {
-  color: var(--muted);
+  color: var(--on-navy);
+  opacity: 0.85;
   max-width: 46ch;
 }
 

@@ -24,10 +24,11 @@
   --border: #d6e3f5;
   --ink: #0b1f3f;
   --navy: #021b44;
-  --muted: #51607a;
+  --muted: #46536c;
   --blue: #0066eb;
   --blue-hover: #0052c2;
   --teal: #22b8cf;
+  --teal-text: #0e7490;        /* teal as TEXT on light surfaces (AA vs bg/soft tints) */
   --green: #4ade80;
 
   /* ---- Color: supporting roles ---- */
@@ -41,10 +42,10 @@
   --green-soft: rgba(74, 222, 128, 0.16);
   --danger: #c2324b;
   --danger-soft: rgba(194, 50, 75, 0.1);
-  --warn: #9a6700;
-  --warn-soft: rgba(154, 103, 0, 0.12);
-  --success: #157f3d;
-  --success-soft: rgba(21, 127, 61, 0.12);
+  --warn: #7a5200;
+  --warn-soft: rgba(122, 82, 0, 0.12);
+  --success: #127238;
+  --success-soft: rgba(18, 114, 56, 0.12);
   --code-bg: #081a38;
   --code-ink: #dfe9ff;
   --code-line: #14315e;
@@ -114,6 +115,7 @@
   --blue-hover: #7ab3ff;
   --link: #5aa5ff;
   --teal: #2ad0e6;
+  --teal-text: #2ad0e6;
   --green: #4ade80;
 
   --on-blue: #ffffff;

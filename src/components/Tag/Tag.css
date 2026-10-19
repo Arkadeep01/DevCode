@@ -26,7 +26,7 @@
 
 .tag--info {
   background: var(--teal-soft);
-  color: var(--teal);
+  color: var(--teal-text);
   border-color: color-mix(in srgb, var(--teal) 30%, transparent);
 }
 
