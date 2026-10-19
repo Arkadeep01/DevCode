@@ -18,16 +18,21 @@ const QUESTION: SessionQuestion = {
   focusArea: 'Arrays',
 };
 
-function renderQuiz(overrides: { answers?: (number | null)[] } = {}) {
-  const handlers = {
-    onSelect: vi.fn(),
-    onToggleFlag: vi.fn(),
-    onNavigate: vi.fn(),
-    onSubmit: vi.fn(),
-  };
-  const answers = overrides.answers ?? [null, null];
+interface RenderOverrides {
+  answers?: (number | null)[];
+  timeLeft?: number | null;
+}
 
-  render(
+interface QuizHandlers {
+  onSelect: (optionIndex: number) => void;
+  onToggleFlag: () => void;
+  onNavigate: (index: number) => void;
+  onSubmit: () => void;
+}
+
+function quizElement(handlers: QuizHandlers, overrides: RenderOverrides) {
+  const answers = overrides.answers ?? [null, null];
+  return (
     <QuizScreen
       question={QUESTION}
       index={0}
@@ -36,13 +41,27 @@ function renderQuiz(overrides: { answers?: (number | null)[] } = {}) {
       flagged={false}
       answers={answers}
       flags={[false, false]}
-      timeLeft={180}
+      timeLeft={overrides.timeLeft === undefined ? 180 : overrides.timeLeft}
       elapsed={0}
       {...handlers}
     />
   );
+}
 
-  return handlers;
+function renderQuiz(overrides: RenderOverrides = {}) {
+  const handlers = {
+    onSelect: vi.fn(),
+    onToggleFlag: vi.fn(),
+    onNavigate: vi.fn(),
+    onSubmit: vi.fn(),
+  };
+
+  const view = render(quizElement(handlers, overrides));
+
+  return {
+    ...handlers,
+    rerender: (next: RenderOverrides = {}) => view.rerender(quizElement(handlers, next)),
+  };
 }
 
 describe('QuizScreen submit confirmation', () => {
@@ -110,5 +129,38 @@ describe('QuizScreen submit confirmation', () => {
     fireEvent.keyDown(window, { key: '2' });
 
     expect(handlers.onSelect).toHaveBeenCalledWith(1);
+  });
+});
+
+describe('QuizScreen low-time accessibility', () => {
+  it('announces upcoming thresholds in a polite live region', () => {
+    const view = renderQuiz({ timeLeft: 301 });
+    expect(screen.getByRole('status').textContent).toBe('');
+
+    view.rerender({ timeLeft: 300 });
+    expect(screen.getByRole('status').textContent).toBe('5 minutes remaining');
+
+    view.rerender({ timeLeft: 59 });
+    expect(screen.getByRole('status').textContent).toBe('1 minute remaining');
+
+    view.rerender({ timeLeft: 30 });
+    expect(screen.getByRole('status').textContent).toBe('30 seconds remaining');
+
+    view.rerender({ timeLeft: 10 });
+    expect(screen.getByRole('status').textContent).toBe('10 seconds remaining');
+  });
+
+  it('shows a non-color low-time indicator on the timer', () => {
+    const view = renderQuiz({ timeLeft: 31 });
+    expect(screen.getByRole('timer').textContent).not.toContain('low time');
+
+    view.rerender({ timeLeft: 30 });
+    expect(screen.getByRole('timer').textContent).toContain('low time');
+  });
+
+  it('does not announce thresholds already passed when mounting into a running quiz', () => {
+    renderQuiz({ timeLeft: 25 });
+
+    expect(screen.getByRole('status').textContent).toBe('');
   });
 });

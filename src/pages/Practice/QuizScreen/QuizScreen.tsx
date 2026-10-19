@@ -6,6 +6,7 @@ import type { SessionQuestion } from '../../../types/question';
 import { formatDuration } from '../formatDuration';
 import { QuestionNavigator } from './QuestionNavigator';
 import { useQuizShortcuts } from './useQuizShortcuts';
+import { useTimerAnnouncements } from './useTimerAnnouncements';
 import './QuizScreen.css';
 
 interface QuizScreenProps {
@@ -44,6 +45,7 @@ export function QuizScreen({
   const [confirming, setConfirming] = useState(false);
   const unanswered = answers.filter((answer) => answer === null).length;
   const isLowTime = timeLeft !== null && timeLeft <= 30;
+  const announcement = useTimerAnnouncements(timeLeft);
 
   useQuizShortcuts({
     optionCount: question.options.length,
@@ -76,6 +78,7 @@ export function QuizScreen({
             {timeLeft === null
               ? `Elapsed ${formatDuration(elapsed)}`
               : `Time left ${formatDuration(timeLeft)}`}
+            {isLowTime ? <span className="quiz__timer-note">low time</span> : null}
           </span>
           <button
             type="button"
@@ -90,6 +93,10 @@ export function QuizScreen({
           </Button>
         </div>
       </header>
+
+      <p className="quiz__announcer" role="status">
+        {announcement}
+      </p>
 
       {confirming ? (
         <div className="quiz__confirm" role="alert">
