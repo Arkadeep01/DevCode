@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { QUESTIONS } from '../../data/questions';
+import { SESSION_KEYS } from '../../utils/storage';
 import type { Question } from '../../types/question';
 import type { PracticeConfig } from './practiceTypes';
 import { buildSession, toSessionQuestion, usePracticeSession } from './usePracticeSession';
@@ -169,5 +170,137 @@ describe('countdown timer', () => {
 
     expect(result.current.timeLeft).toBeNull();
     expect(result.current.phase).toBe('quiz');
+  });
+});
+
+describe('session recovery', () => {
+  const config: PracticeConfig = {
+    tracks: ['dsa'],
+    difficulty: 'Mixed',
+    count: 2,
+    untimed: false,
+  };
+
+  beforeEach(() => {
+    window.sessionStorage.clear();
+  });
+
+  afterEach(cleanup);
+
+  it('persists the in-progress quiz to sessionStorage', () => {
+    const { result } = renderHook(() => usePracticeSession());
+
+    act(() => {
+      result.current.start(config);
+    });
+
+    const draft = JSON.parse(
+      window.sessionStorage.getItem(SESSION_KEYS.practiceDraft) ?? 'null'
+    );
+    expect(draft.questions).toHaveLength(2);
+    expect(draft.answers).toEqual([null, null]);
+
+    act(() => {
+      result.current.answer(1);
+    });
+
+    const updated = JSON.parse(
+      window.sessionStorage.getItem(SESSION_KEYS.practiceDraft) ?? 'null'
+    );
+    expect(updated.answers).toEqual([1, null]);
+  });
+
+  it('exposes an interrupted quiz as recoverable and resumes it', () => {
+    const first = renderHook(() => usePracticeSession());
+    act(() => {
+      first.result.current.start(config);
+    });
+    act(() => {
+      first.result.current.answer(0);
+    });
+    first.unmount();
+
+    const second = renderHook(() => usePracticeSession());
+    expect(second.result.current.phase).toBe('setup');
+    expect(second.result.current.recoverable?.answers).toEqual([0, null]);
+
+    act(() => {
+      second.result.current.resume();
+    });
+
+    expect(second.result.current.phase).toBe('quiz');
+    expect(second.result.current.answers).toEqual([0, null]);
+    expect(second.result.current.questions).toHaveLength(2);
+    expect(second.result.current.timeLeft).not.toBeNull();
+    expect(second.result.current.timeLeft ?? 0).toBeLessThanOrEqual(180);
+  });
+
+  it('discards drafts that fail validation', () => {
+    window.sessionStorage.setItem(SESSION_KEYS.practiceDraft, '{broken');
+    const broken = renderHook(() => usePracticeSession());
+    expect(broken.result.current.recoverable).toBeNull();
+    broken.unmount();
+
+    window.sessionStorage.setItem(
+      SESSION_KEYS.practiceDraft,
+      JSON.stringify({
+        config,
+        questions: [{}],
+        answers: [],
+        flags: [],
+        current: 0,
+        startedAt: 1,
+        deadline: null,
+      })
+    );
+    const mismatched = renderHook(() => usePracticeSession());
+    expect(mismatched.result.current.recoverable).toBeNull();
+  });
+
+  it('clears the draft when the quiz is submitted or discarded', () => {
+    const first = renderHook(() => usePracticeSession());
+    act(() => {
+      first.result.current.start(config);
+    });
+    first.unmount();
+
+    const second = renderHook(() => usePracticeSession());
+    act(() => {
+      second.result.current.discardRecovery();
+    });
+    expect(second.result.current.recoverable).toBeNull();
+    expect(window.sessionStorage.getItem(SESSION_KEYS.practiceDraft)).toBeNull();
+
+    const third = renderHook(() => usePracticeSession());
+    act(() => {
+      third.result.current.start(config);
+    });
+    act(() => {
+      third.result.current.submitNow();
+    });
+    expect(third.result.current.phase).toBe('results');
+    expect(window.sessionStorage.getItem(SESSION_KEYS.practiceDraft)).toBeNull();
+  });
+
+  it('guards against reload while a quiz is in progress', () => {
+    const { result } = renderHook(() => usePracticeSession());
+
+    const idle = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(idle);
+    expect(idle.defaultPrevented).toBe(false);
+
+    act(() => {
+      result.current.start(config);
+    });
+    const leaving = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(leaving);
+    expect(leaving.defaultPrevented).toBe(true);
+
+    act(() => {
+      result.current.submitNow();
+    });
+    const finished = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(finished);
+    expect(finished.defaultPrevented).toBe(false);
   });
 });

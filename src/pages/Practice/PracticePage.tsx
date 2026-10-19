@@ -1,3 +1,4 @@
+import { Button } from '../../components/Button/Button';
 import { QuizScreen } from './QuizScreen/QuizScreen';
 import { ResultsScreen } from './ResultsScreen/ResultsScreen';
 import { SetupScreen } from './SetupScreen/SetupScreen';
@@ -14,7 +15,10 @@ export function PracticePage() {
     current,
     timeLeft,
     elapsed,
+    recoverable,
     start,
+    resume,
+    discardRecovery,
     answer,
     goTo,
     toggleFlag,
@@ -25,7 +29,30 @@ export function PracticePage() {
   } = usePracticeSession();
 
   if (phase === 'setup') {
-    return <SetupScreen onStart={start} />;
+    return (
+      <>
+        {recoverable ? (
+          <div className="practice-recovery" role="region" aria-label="Unfinished quiz">
+            <div className="practice-recovery__text">
+              <strong>Unfinished quiz found.</strong>{' '}
+              <span>
+                Question {recoverable.current + 1} of {recoverable.questions.length} ·{' '}
+                {recoverable.answers.filter((item) => item !== null).length} answered
+              </span>
+            </div>
+            <div className="practice-recovery__actions">
+              <Button size="sm" onClick={resume}>
+                Resume quiz
+              </Button>
+              <Button size="sm" variant="subtle" onClick={discardRecovery}>
+                Discard
+              </Button>
+            </div>
+          </div>
+        ) : null}
+        <SetupScreen onStart={start} />
+      </>
+    );
   }
 
   if (phase === 'quiz' && questions.length > 0) {

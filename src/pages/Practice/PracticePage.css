@@ -1,3 +1,37 @@
 .practice-fallback {
   min-height: 40vh;
 }
+
+.practice-recovery {
+  max-width: var(--container);
+  margin: var(--space-lg) auto 0;
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+}
+
+.practice-recovery__text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2xs);
+}
+
+.practice-recovery__actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+@media (max-width: 560px) {
+  .practice-recovery {
+    margin-inline: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+  }
+}

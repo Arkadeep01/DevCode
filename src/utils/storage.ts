@@ -8,6 +8,11 @@ export const STORAGE_KEYS = {
   theme: 'devcode_theme',
 } as const;
 
+/** Tab-scoped keys (sessionStorage) — cleared when the tab closes. */
+export const SESSION_KEYS = {
+  practiceDraft: 'devcode_practice_draft',
+} as const;
+
 export function readJson<T>(key: string, fallback: T): T {
   try {
     const raw = window.localStorage.getItem(key);
@@ -24,6 +29,33 @@ export function writeJson(key: string, value: unknown): void {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
     /* storage unavailable — ignore */
+  }
+}
+
+export function readSessionJson<T>(key: string, fallback: T): T {
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed: unknown = JSON.parse(raw);
+    return (parsed as T) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function writeSessionJson(key: string, value: unknown): void {
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* storage unavailable — ignore */
+  }
+}
+
+export function clearSessionKey(key: string): void {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    /* ignore */
   }
 }
 
