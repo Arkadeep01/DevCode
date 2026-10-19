@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-li
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/Toast/ToastProvider';
+import { first } from '../../test/items';
 import { STORAGE_KEYS } from '../../utils/storage';
 import { StudyPage } from './StudyPage';
 import { useTopicProgress } from './useTopicProgress';
@@ -83,7 +84,7 @@ describe('StudyPage toast feedback', () => {
       </MemoryRouter>,
     );
 
-    const [bookmarkButton] = screen.getAllByRole('button', { name: /^Bookmark / });
+    const bookmarkButton = first(screen.getAllByRole('button', { name: /^Bookmark / }));
 
     fireEvent.click(bookmarkButton);
     expect(screen.getByText('Saved to bookmarks')).toBeDefined();

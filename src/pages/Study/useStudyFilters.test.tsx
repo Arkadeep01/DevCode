@@ -4,6 +4,7 @@ import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ToastProvider } from '../../components/Toast/ToastProvider';
 import { TOPIC_CATEGORIES } from '../../data/studyTopics';
+import { first } from '../../test/items';
 import { StudyPage } from './StudyPage';
 import { useStudyFilters } from './useStudyFilters';
 
@@ -98,7 +99,7 @@ describe('useStudyFilters category deep link', () => {
 });
 
 describe('StudyPage category toolbar', () => {
-  const firstCategory = TOPIC_CATEGORIES[0];
+  const firstCategory = first(TOPIC_CATEGORIES);
 
   it('writes the picked category to the URL and clears it on reset', () => {
     render(

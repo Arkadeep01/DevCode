@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { first, last } from '../test/items';
 import type { QuizAttempt } from '../types/question';
 import {
   STORAGE_KEYS,
@@ -82,8 +83,8 @@ describe('storage helpers', () => {
 
     const history = readQuizHistory();
     expect(history).toHaveLength(20);
-    expect(history[0].score).toBe(21);
-    expect(history[19].score).toBe(2);
+    expect(first(history).score).toBe(21);
+    expect(last(history).score).toBe(2);
   });
 
   it('clearQuizHistory removes the stored attempts', () => {

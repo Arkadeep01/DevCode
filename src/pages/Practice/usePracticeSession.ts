@@ -54,7 +54,11 @@ function clearDraft(): void {
 export function toSessionQuestion(question: Question | SessionQuestion): SessionQuestion {
   const correctOption = question.options[question.correctIndex];
   const options = shuffle(question.options);
-  return { ...question, options, correctIndex: options.indexOf(correctOption) };
+  return {
+    ...question,
+    options,
+    correctIndex: correctOption === undefined ? -1 : options.indexOf(correctOption),
+  };
 }
 
 export function buildSession(config: PracticeConfig): SessionQuestion[] {

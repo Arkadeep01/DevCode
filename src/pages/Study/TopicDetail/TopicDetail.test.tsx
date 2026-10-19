@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { STUDY_TOPICS } from '../../../data/studyTopics';
+import { first } from '../../../test/items';
 import { TopicDetail } from './TopicDetail';
 
 afterEach(cleanup);
 
-const TOPIC = STUDY_TOPICS[0];
+const TOPIC = first(STUDY_TOPICS);
 
 function Harness() {
   const [open, setOpen] = useState(false);

@@ -3,9 +3,11 @@ export function shuffle<T>(items: readonly T[]): T[] {
   const result = items.slice();
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    const tmp = result[i];
-    result[i] = result[j];
-    result[j] = tmp;
+    const current = result[i];
+    const other = result[j];
+    if (current === undefined || other === undefined) continue;
+    result[i] = other;
+    result[j] = current;
   }
   return result;
 }

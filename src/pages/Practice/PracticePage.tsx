@@ -81,25 +81,27 @@ export function PracticePage() {
     );
   }
 
-  if (phase === 'quiz' && questions.length > 0) {
+  if (phase === 'quiz') {
     const question = questions[current];
-    return (
-      <QuizScreen
-        question={question}
-        index={current}
-        total={questions.length}
-        selected={answers[current] ?? null}
-        flagged={Boolean(flags[current])}
-        answers={answers}
-        flags={flags}
-        timeLeft={timeLeft}
-        elapsed={elapsed}
-        onSelect={answer}
-        onToggleFlag={toggleFlag}
-        onNavigate={goTo}
-        onSubmit={submitNow}
-      />
-    );
+    if (question) {
+      return (
+        <QuizScreen
+          question={question}
+          index={current}
+          total={questions.length}
+          selected={answers[current] ?? null}
+          flagged={Boolean(flags[current])}
+          answers={answers}
+          flags={flags}
+          timeLeft={timeLeft}
+          elapsed={elapsed}
+          onSelect={answer}
+          onToggleFlag={toggleFlag}
+          onNavigate={goTo}
+          onSubmit={submitNow}
+        />
+      );
+    }
   }
 
   if (phase === 'results' && result) {

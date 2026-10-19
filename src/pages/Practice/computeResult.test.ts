@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { first } from '../../test/items';
 import type { SessionQuestion } from '../../types/question';
 import type { PracticeConfig } from './practiceTypes';
 import { computeResult } from './computeResult';
@@ -46,7 +47,7 @@ describe('computeResult', () => {
 
     expect(result.score).toBe(0);
     expect(result.pct).toBe(0);
-    expect(result.review[0].correct).toBe(false);
+    expect(first(result.review).correct).toBe(false);
     expect(result.focusGroups).toEqual([
       { category: 'dsa', categoryLabel: 'DSA', areas: ['Arrays'] },
     ]);
@@ -56,8 +57,8 @@ describe('computeResult', () => {
     const { result } = computeResult([makeQuestion()], [null], [false], startedAt, CONFIG);
 
     expect(result.unanswered).toBe(1);
-    expect(result.review[0].selected).toBeNull();
-    expect(result.review[0].correct).toBe(false);
+    expect(first(result.review).selected).toBeNull();
+    expect(first(result.review).correct).toBe(false);
     expect(result.focusGroups).toHaveLength(1);
   });
 
@@ -80,7 +81,7 @@ describe('computeResult', () => {
     expect(result.total).toBe(4);
     expect(result.pct).toBe(25);
     expect(result.unanswered).toBe(1);
-    expect(result.review[0].flagged).toBe(true);
+    expect(first(result.review).flagged).toBe(true);
     expect(result.focusGroups).toEqual([
       { category: 'dsa', categoryLabel: 'DSA', areas: ['Trees', 'Graphs'] },
       { category: 'sql', categoryLabel: 'SQL', areas: ['Joins'] },

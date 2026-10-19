@@ -37,7 +37,7 @@ function quizElement(handlers: QuizHandlers, overrides: RenderOverrides) {
       question={QUESTION}
       index={0}
       total={2}
-      selected={answers[0]}
+      selected={answers[0] ?? null}
       flagged={false}
       answers={answers}
       flags={[false, false]}

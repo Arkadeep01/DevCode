@@ -8,7 +8,9 @@ export type Rgba = [number, number, number, number];
 function parseBlock(block: string): Record<string, string> {
   const tokens: Record<string, string> = {};
   for (const match of block.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;}]+);/g)) {
-    tokens[match[1].slice(2)] = match[2].trim();
+    const [, name, value] = match;
+    if (name === undefined || value === undefined) continue;
+    tokens[name.slice(2)] = value.trim();
   }
   return tokens;
 }
@@ -27,14 +29,22 @@ export function parseColor(value: string): Rgba {
   if (value.startsWith('#')) {
     let hex = value.slice(1);
     if (hex.length === 3) hex = [...hex].map((char) => char + char).join('');
-    const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
-    return [r, g, b, 1];
+    return [
+      parseInt(hex.slice(0, 2), 16),
+      parseInt(hex.slice(2, 4), 16),
+      parseInt(hex.slice(4, 6), 16),
+      1,
+    ];
   }
   const match = value.match(
     /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/,
   );
   if (!match) throw new Error(`Unsupported color value: ${value}`);
-  return [+match[1], +match[2], +match[3], match[4] === undefined ? 1 : +match[4]];
+  const [, r, g, b, alpha] = match;
+  if (r === undefined || g === undefined || b === undefined) {
+    throw new Error(`Unsupported color value: ${value}`);
+  }
+  return [+r, +g, +b, alpha === undefined ? 1 : +alpha];
 }
 
 export function token(tokens: Record<string, string>, name: string): Rgba {
@@ -45,26 +55,29 @@ export function token(tokens: Record<string, string>, name: string): Rgba {
 
 /** Alpha-composites a (possibly translucent) layer over an opaque background. */
 export function composite(layer: Rgba, background: Rgba): Rgba {
-  const alpha = layer[3];
-  const rgb = [0, 1, 2].map((i) =>
-    Math.round(layer[i] * alpha + background[i] * (1 - alpha)),
-  );
-  return [rgb[0], rgb[1], rgb[2], 1];
+  const [layerR, layerG, layerB, alpha] = layer;
+  const [bgR, bgG, bgB] = background;
+  return [
+    Math.round(layerR * alpha + bgR * (1 - alpha)),
+    Math.round(layerG * alpha + bgG * (1 - alpha)),
+    Math.round(layerB * alpha + bgB * (1 - alpha)),
+    1,
+  ];
 }
 
 export function relativeLuminance(color: Rgba): number {
-  const [r, g, b] = color.slice(0, 3).map((channel) => {
+  const linearize = (channel: number) => {
     const s = channel / 255;
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const [r, g, b] = color;
+  return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
 }
 
 export function contrastRatio(foreground: Rgba, background: Rgba): number {
-  const [lighter, darker] = [relativeLuminance(foreground), relativeLuminance(background)].sort(
-    (a, b) => b - a,
-  );
-  return (lighter + 0.05) / (darker + 0.05);
+  const a = relativeLuminance(foreground);
+  const b = relativeLuminance(background);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
 export function tokensContrast(

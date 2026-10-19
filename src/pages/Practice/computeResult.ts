@@ -29,9 +29,9 @@ export function computeResult(
 
   const review = questions.map((question, index) => ({
     question,
-    selected: answers[index],
+    selected: answers[index] ?? null,
     correct: answers[index] === question.correctIndex,
-    flagged: flags[index],
+    flagged: flags[index] ?? false,
   }));
 
   const categoryMap = new Map<string, CategoryScore>();
