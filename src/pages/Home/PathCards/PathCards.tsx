@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { SectionHeader } from '../../../components/SectionHeader/SectionHeader';
 import { Card } from '../../../components/Card/Card';
 import { Tag } from '../../../components/Tag/Tag';
-import { countTopicsInCategory } from '../../../data/studyTopics';
+import { BANK_COUNTS } from '../../../data/bankCounts';
 import { ROUTES, SECTION_IDS } from '../../../routes';
 import type { TopicCategory } from '../../../types/topic';
 import './PathCards.css';
@@ -52,7 +52,7 @@ export function PathCards() {
         <div className="paths__grid">
           {PATHS.map((path) => (
             <Card key={path.id} interactive className="paths__card">
-              <Tag variant="category">{countTopicsInCategory(path.id)} topics</Tag>
+              <Tag variant="category">{BANK_COUNTS.topicsByCategory[path.id]} topics</Tag>
               <h3 className="paths__card-title">{path.title}</h3>
               <p className="paths__card-text">{path.description}</p>
               <Link className="paths__card-link" to={`${ROUTES.study}?category=${path.id}`}>

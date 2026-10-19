@@ -1,11 +1,10 @@
-import { TRACKS, totalQuestionCount } from '../../../data/questions';
-import { STUDY_TOPICS } from '../../../data/studyTopics';
+import { BANK_COUNTS } from '../../../data/bankCounts';
 import './StatStrip.css';
 
 const STATS = [
-  { value: totalQuestionCount(), label: 'Practice questions' },
-  { value: STUDY_TOPICS.length, label: 'Study topics' },
-  { value: TRACKS.length, label: 'Skill tracks' },
+  { value: BANK_COUNTS.totalQuestions, label: 'Practice questions' },
+  { value: BANK_COUNTS.totalTopics, label: 'Study topics' },
+  { value: BANK_COUNTS.totalTracks, label: 'Skill tracks' },
   { value: 3, label: 'Difficulty levels' },
 ];
 
