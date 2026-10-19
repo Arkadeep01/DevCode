@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './auth/AuthProvider';
 import { Footer } from './components/Footer/Footer';
 import { Navbar } from './components/Navbar/Navbar';
 import { ScrollManager } from './components/ScrollManager/ScrollManager';
@@ -19,26 +20,28 @@ const PracticePage = lazy(() =>
 
 export function App() {
   return (
-    <ToastProvider>
-      <Navbar />
-      <main className="app-main">
-        <ScrollManager />
-        <Suspense
-          fallback={
-            <div className="app-loading" role="status">
-              Loading…
-            </div>
-          }
-        >
-          <Routes>
-            <Route path={ROUTES.home} element={<HomePage />} />
-            <Route path={ROUTES.study} element={<StudyPage />} />
-            <Route path={ROUTES.practice} element={<PracticePage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
-      </main>
-      <Footer />
-    </ToastProvider>
+    <AuthProvider>
+      <ToastProvider>
+        <Navbar />
+        <main className="app-main">
+          <ScrollManager />
+          <Suspense
+            fallback={
+              <div className="app-loading" role="status">
+                Loading…
+              </div>
+            }
+          >
+            <Routes>
+              <Route path={ROUTES.home} element={<HomePage />} />
+              <Route path={ROUTES.study} element={<StudyPage />} />
+              <Route path={ROUTES.practice} element={<PracticePage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </main>
+        <Footer />
+      </ToastProvider>
+    </AuthProvider>
   );
 }

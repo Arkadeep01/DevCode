@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   bookmarks: 'devcode_study_bookmarks',
   quizHistory: 'devcode_quiz_history',
   theme: 'devcode_theme',
+  authToken: 'devcode_auth_token',
 } as const;
 
 /** Tab-scoped keys (sessionStorage) — cleared when the tab closes. */
