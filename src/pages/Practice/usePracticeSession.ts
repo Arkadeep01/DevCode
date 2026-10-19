@@ -34,20 +34,34 @@ export function usePracticeSession() {
   const [elapsed, setElapsed] = useState(0);
   const [result, setResult] = useState<PracticeResult | null>(null);
   const startedAtRef = useRef(0);
+  const deadlineRef = useRef<number | null>(null);
   const submittedRef = useRef(false);
 
   useEffect(() => {
     if (phase !== 'quiz') return;
-    const interval = window.setInterval(() => {
+
+    const tick = () => {
       setElapsed(Math.floor((Date.now() - startedAtRef.current) / 1000));
-      setTimeLeft((prev) => (prev === null ? prev : Math.max(0, prev - 1)));
-    }, 1000);
-    return () => window.clearInterval(interval);
+      setTimeLeft((prev) => {
+        if (prev === null || deadlineRef.current === null) return prev;
+        return Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000));
+      });
+    };
+
+    const interval = window.setInterval(tick, 1000);
+    document.addEventListener('visibilitychange', tick);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', tick);
+    };
   }, [phase]);
 
   const beginSession = useCallback((nextConfig: PracticeConfig, session: SessionQuestion[]) => {
     submittedRef.current = false;
     startedAtRef.current = Date.now();
+    deadlineRef.current = nextConfig.untimed
+      ? null
+      : Date.now() + session.length * SECONDS_PER_QUESTION * 1000;
     setConfig(nextConfig);
     setQuestions(session);
     setAnswers(Array(session.length).fill(null));

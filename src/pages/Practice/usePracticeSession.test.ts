@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, renderHook } from '@testing-library/react';
 import { QUESTIONS } from '../../data/questions';
 import type { Question } from '../../types/question';
 import type { PracticeConfig } from './practiceTypes';
-import { buildSession, toSessionQuestion } from './usePracticeSession';
+import { buildSession, toSessionQuestion, usePracticeSession } from './usePracticeSession';
 
 function makeQuestion(overrides: Partial<Question> = {}): Question {
   return {
@@ -103,5 +104,70 @@ describe('buildSession', () => {
       if (!source) throw new Error(`question ${question.id} missing from the bank`);
       expect(question.options[question.correctIndex]).toBe(source.options[source.correctIndex]);
     }
+  });
+});
+
+describe('countdown timer', () => {
+  const config: PracticeConfig = {
+    tracks: ['dsa'],
+    difficulty: 'Mixed',
+    count: 2,
+    untimed: false,
+  };
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('derives time left from the wall clock instead of counting ticks', () => {
+    const { result } = renderHook(() => usePracticeSession());
+
+    act(() => {
+      result.current.start(config);
+    });
+    expect(result.current.timeLeft).toBe(180);
+
+    // 30 seconds of real time pass while the tab is throttled: one tick fires.
+    vi.setSystemTime(1_030_000);
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+
+    expect(result.current.timeLeft).toBe(149);
+  });
+
+  it('auto-submits once the wall-clock deadline passes', () => {
+    const { result } = renderHook(() => usePracticeSession());
+
+    act(() => {
+      result.current.start(config);
+    });
+    vi.setSystemTime(1_180_001);
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+
+    expect(result.current.phase).toBe('results');
+  });
+
+  it('keeps untimed sessions free of a countdown', () => {
+    const { result } = renderHook(() => usePracticeSession());
+
+    act(() => {
+      result.current.start({ ...config, untimed: true });
+    });
+    vi.setSystemTime(1_060_000);
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+
+    expect(result.current.timeLeft).toBeNull();
+    expect(result.current.phase).toBe('quiz');
   });
 });
