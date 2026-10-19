@@ -155,6 +155,21 @@ describe('countdown timer', () => {
     });
 
     expect(result.current.phase).toBe('results');
+    expect(result.current.timedOut).toBe(true);
+  });
+
+  it('does not flag a manual submit as timed out', () => {
+    const { result } = renderHook(() => usePracticeSession());
+
+    act(() => {
+      result.current.start(config);
+    });
+    act(() => {
+      result.current.submitNow();
+    });
+
+    expect(result.current.phase).toBe('results');
+    expect(result.current.timedOut).toBe(false);
   });
 
   it('keeps untimed sessions free of a countdown', () => {

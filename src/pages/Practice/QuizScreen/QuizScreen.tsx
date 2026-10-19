@@ -47,6 +47,7 @@ export function QuizScreen({
 
   useQuizShortcuts({
     optionCount: question.options.length,
+    enabled: !confirming,
     onSelect,
     onNext: () => onNavigate(index + 1),
     onPrev: () => onNavigate(index - 1),
@@ -84,7 +85,7 @@ export function QuizScreen({
           >
             {flagged ? 'Flagged' : 'Flag for review'}
           </button>
-          <Button size="sm" onClick={handleSubmit}>
+          <Button size="sm" onClick={handleSubmit} disabled={confirming}>
             Submit quiz
           </Button>
         </div>

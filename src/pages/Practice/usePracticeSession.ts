@@ -76,6 +76,7 @@ export function usePracticeSession() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [result, setResult] = useState<PracticeResult | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
   const [recoverable, setRecoverable] = useState<PracticeDraft | null>(() => readDraft());
   const startedAtRef = useRef(0);
   const deadlineRef = useRef<number | null>(null);
@@ -137,6 +138,7 @@ export function usePracticeSession() {
     setElapsed(0);
     setTimeLeft(nextConfig.untimed ? null : session.length * SECONDS_PER_QUESTION);
     setResult(null);
+    setTimedOut(false);
     setPhase('quiz');
   }, []);
 
@@ -161,6 +163,7 @@ export function usePracticeSession() {
 
   useEffect(() => {
     if (phase === 'quiz' && timeLeft === 0 && !submittedRef.current) {
+      setTimedOut(true);
       finish(questions, answers, flags);
     }
   }, [phase, timeLeft, questions, answers, flags, finish]);
@@ -221,6 +224,7 @@ export function usePracticeSession() {
   const newQuiz = useCallback(() => {
     submittedRef.current = false;
     setResult(null);
+    setTimedOut(false);
     setPhase('setup');
   }, []);
 
@@ -241,6 +245,7 @@ export function usePracticeSession() {
         : Math.max(0, Math.ceil((recoverable.deadline - Date.now()) / 1000)),
     );
     setResult(null);
+    setTimedOut(false);
     setPhase('quiz');
     setRecoverable(null);
   }, [recoverable]);
@@ -254,6 +259,7 @@ export function usePracticeSession() {
     phase,
     config,
     result,
+    timedOut,
     questions,
     answers,
     flags,

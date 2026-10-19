@@ -18,6 +18,16 @@
   color: var(--muted);
 }
 
+.results__notice {
+  width: fit-content;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--warn);
+  border-radius: var(--radius-sm);
+  background: var(--warn-soft);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
 .results__actions {
   display: flex;
   flex-wrap: wrap;

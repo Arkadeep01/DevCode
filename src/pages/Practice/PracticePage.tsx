@@ -9,6 +9,7 @@ export function PracticePage() {
   const {
     phase,
     result,
+    timedOut,
     questions,
     answers,
     flags,
@@ -80,6 +81,7 @@ export function PracticePage() {
     return (
       <ResultsScreen
         result={result}
+        timedOut={timedOut}
         onRetakeSame={retakeSame}
         onNewQuiz={newQuiz}
         onRetryMissed={retryMissed}

@@ -7,6 +7,7 @@ import './ResultsScreen.css';
 
 interface ResultsScreenProps {
   result: PracticeResult;
+  timedOut: boolean;
   onRetakeSame: () => void;
   onNewQuiz: () => void;
   onRetryMissed: () => void;
@@ -14,6 +15,7 @@ interface ResultsScreenProps {
 
 export function ResultsScreen({
   result,
+  timedOut,
   onRetakeSame,
   onNewQuiz,
   onRetryMissed,
@@ -34,6 +36,15 @@ export function ResultsScreen({
         <p className="results__sub">
           You scored {result.score} of {result.total} ({result.pct}%).
         </p>
+        {timedOut ? (
+          <p className="results__notice">
+            {result.unanswered > 0
+              ? `Time ran out — ${result.unanswered} unanswered question${
+                  result.unanswered === 1 ? '' : 's'
+                } submitted as skipped.`
+              : 'Time ran out — submitted automatically.'}
+          </p>
+        ) : null}
         <div className="results__actions">
           <Button onClick={onRetryMissed} disabled={missedCount === 0}>
             Retry missed ({missedCount})
