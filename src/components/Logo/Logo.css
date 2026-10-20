@@ -1,8 +1,9 @@
 .logo {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: var(--space-sm);
   color: var(--heading);
+  border-radius: var(--radius-xs);
   transition: opacity var(--dur) var(--ease);
 }
 
@@ -10,37 +11,18 @@
   opacity: 0.85;
 }
 
-.logo__mark {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  background: var(--primary);
-  color: var(--on-primary);
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: -0.04em;
+.logo__img {
+  display: block;
+  width: auto;
+  height: 40px;
 }
 
-.logo__word {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.logo--sm .logo__img {
+  height: 32px;
 }
 
-.logo__dot {
-  color: var(--link);
-}
-
-.logo--sm .logo__mark {
-  width: 30px;
-  height: 30px;
-  font-size: 0.7rem;
-}
-
-.logo--sm .logo__word {
-  font-size: var(--text-lg);
+@media (max-width: 560px) {
+  .logo__img {
+    height: 32px;
+  }
 }
