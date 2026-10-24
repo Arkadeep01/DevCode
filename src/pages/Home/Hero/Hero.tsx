@@ -10,7 +10,16 @@ export function Hero() {
 
   return (
     <section className="hero" aria-labelledby="hero-title">
-      <img className="hero__bg" src={heroBg} alt="" aria-hidden="true" />
+      <img
+        className="hero__bg"
+        src={heroBg}
+        alt=""
+        aria-hidden="true"
+        width={1600}
+        height={1024}
+        decoding="async"
+        fetchPriority="high"
+      />
       <span className="hero__scrim" aria-hidden="true" />
       <div className="hero__inner">
         <Eyebrow tone="blue" dot>
