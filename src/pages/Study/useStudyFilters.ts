@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { STUDY_TOPICS } from '../../data/studyTopics';
-import type { StudyTopic, TopicCategory, TopicTag } from '../../types/topic';
+import type { TopicCategory, TopicTag } from '../../types/topic';
 
 export type CategoryFilter = TopicCategory | 'all';
 export type TagFilter = TopicTag | 'all';
@@ -83,5 +83,3 @@ export function useStudyFilters() {
     total: STUDY_TOPICS.length,
   };
 }
-
-export type { StudyTopic };

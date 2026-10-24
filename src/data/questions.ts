@@ -46,7 +46,3 @@ export function countForTrack(
       (difficulty === 'Mixed' || q.difficulty === difficulty),
   ).length;
 }
-
-export function totalQuestionCount(): number {
-  return QUESTIONS.length;
-}

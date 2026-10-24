@@ -53,7 +53,7 @@ src/
   styles/            tokens.css (colors/spacing), base.css, typography.css
   theme/             ThemeProvider + ThemeToggle (localStorage `devcode_theme`)
   types/             Question + StudyTopic types
-  utils/             shuffle, storage, escapeHtml, sanitizeRichText
+  utils/             shuffle, storage, sanitizeRichText, document title
 ```
 
 Pages never import each other; shared UI lives in `components/`, data in `data/`.
