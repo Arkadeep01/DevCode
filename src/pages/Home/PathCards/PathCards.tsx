@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useGuardedNavigate } from '../../../components/NavigationGuard/useGuardedNavigate';
 import { SectionHeader } from '../../../components/SectionHeader/SectionHeader';
 import { Card } from '../../../components/Card/Card';
 import { Tag } from '../../../components/Tag/Tag';
@@ -41,6 +42,8 @@ const PATHS: PathMeta[] = [
 ];
 
 export function PathCards() {
+  const guardNavigation = useGuardedNavigate();
+
   return (
     <section className="paths" id={SECTION_IDS.studyPaths} aria-labelledby="paths-title">
       <div className="paths__inner">
@@ -55,7 +58,13 @@ export function PathCards() {
               <Tag variant="category">{BANK_COUNTS.topicsByCategory[path.id]} topics</Tag>
               <h3 className="paths__card-title">{path.title}</h3>
               <p className="paths__card-text">{path.description}</p>
-              <Link className="paths__card-link" to={`${ROUTES.study}?category=${path.id}`}>
+              <Link
+                className="paths__card-link"
+                to={`${ROUTES.study}?category=${path.id}`}
+                onClick={(event) =>
+                  guardNavigation(event, `${ROUTES.study}?category=${path.id}`)
+                }
+              >
                 Explore path &#8599;
               </Link>
             </Card>

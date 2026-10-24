@@ -7,6 +7,7 @@ import logo2x from '../../assets/logo/devcode-logo@2x.png';
 import logoWebp2x from '../../assets/logo/devcode-logo@2x.webp';
 import logo from '../../assets/logo/devcode-logo.png';
 import logoWebp from '../../assets/logo/devcode-logo.webp';
+import { useGuardedNavigate } from '../NavigationGuard/useGuardedNavigate';
 import { ROUTES } from '../../routes';
 import { useTheme } from '../../theme/ThemeProvider';
 import './Logo.css';
@@ -32,6 +33,7 @@ const ASSETS = {
 
 export function Logo({ size = 'md' }: LogoProps) {
   const { theme } = useTheme();
+  const guardNavigation = useGuardedNavigate();
   const assets = ASSETS[theme];
 
   return (
@@ -39,6 +41,7 @@ export function Logo({ size = 'md' }: LogoProps) {
       to={ROUTES.home}
       className={['logo', `logo--${size}`].join(' ')}
       aria-label="DevCode home"
+      onClick={(event) => guardNavigation(event, ROUTES.home)}
     >
       <picture>
         <source type="image/webp" srcSet={`${assets.webp} 1x, ${assets.webp2x} 2x`} />

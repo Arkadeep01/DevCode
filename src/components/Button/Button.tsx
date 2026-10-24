@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useGuardedNavigate } from '../NavigationGuard/useGuardedNavigate';
 import './Button.css';
 
 export type ButtonVariant = 'primary' | 'ghost' | 'outline' | 'teal' | 'white' | 'subtle';
@@ -29,13 +30,21 @@ export function Button({
   className,
   ariaLabel,
 }: ButtonProps) {
+  const guardNavigation = useGuardedNavigate();
   const classes = ['btn', `btn--${variant}`, `btn--${size}`, className]
     .filter(Boolean)
     .join(' ');
 
   if (to) {
     return (
-      <Link to={to} className={classes} aria-label={ariaLabel}>
+      <Link
+        to={to}
+        className={classes}
+        aria-label={ariaLabel}
+        onClick={(event) => {
+          if (!guardNavigation(event, to)) onClick?.();
+        }}
+      >
         {children}
       </Link>
     );

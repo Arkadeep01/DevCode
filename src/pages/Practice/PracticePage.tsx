@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
+import { useNavigationGuard } from '../../components/NavigationGuard/NavigationGuardContext';
 import { QuizScreen } from './QuizScreen/QuizScreen';
 import { ResultsScreen } from './ResultsScreen/ResultsScreen';
 import { SetupScreen } from './SetupScreen/SetupScreen';
@@ -12,6 +13,7 @@ export function PracticePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [setup] = useState(() => parseSetupParams(searchParams));
   const autostartConsumed = useRef(false);
+  const { setGuard } = useNavigationGuard();
   const {
     phase,
     result,
@@ -34,6 +36,11 @@ export function PracticePage() {
     retryMissed,
     newQuiz,
   } = usePracticeSession();
+
+  useEffect(() => {
+    setGuard(phase === 'quiz');
+    return () => setGuard(false);
+  }, [phase, setGuard]);
 
   useEffect(() => {
     if (phase !== 'setup' || autostartConsumed.current) return;

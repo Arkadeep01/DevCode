@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+} from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ROUTES } from '../../routes';
 import { useScrollToSection } from '../../utils/scrollToSection';
 import { Button } from '../Button/Button';
 import { Logo } from '../Logo/Logo';
+import { useGuardedNavigate } from '../NavigationGuard/useGuardedNavigate';
 import { ThemeToggle } from '../../theme/ThemeToggle';
 import { ROUTE_LINKS, SECTION_LINKS } from './navLinks';
 import './Navbar.css';
@@ -13,6 +17,7 @@ export function Navbar() {
   const { pathname } = useLocation();
   const isHome = pathname === ROUTES.home;
   const scrollToSection = useScrollToSection();
+  const guardNavigation = useGuardedNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
@@ -21,6 +26,10 @@ export function Navbar() {
   }, [pathname]);
 
   const closeMenu = () => setMenuOpen(false);
+
+  const handleRouteClick = (event: ReactMouseEvent<HTMLAnchorElement>, to: string) => {
+    if (!guardNavigation(event, to)) closeMenu();
+  };
 
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
     if (event.key !== 'Escape' || !menuOpen) return;
@@ -50,7 +59,7 @@ export function Navbar() {
       className={({ isActive }) =>
         ['navbar__link', isActive ? 'navbar__link--active' : ''].join(' ')
       }
-      onClick={closeMenu}
+      onClick={(event) => handleRouteClick(event, link.to)}
     >
       {link.label}
     </NavLink>
