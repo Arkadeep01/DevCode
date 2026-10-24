@@ -6,7 +6,7 @@ import { Tag } from '../../../components/Tag/Tag';
 import { getFocusableElements, inertBackground } from '../../../utils/dialogFocus';
 import { sanitizeRichText } from '../../../utils/sanitizeRichText';
 import type { StudyTopic } from '../../../types/topic';
-import { TAG_META } from '../TopicCard/TopicCard';
+import { TAG_META } from '../tagMeta';
 import './TopicDetail.css';
 
 interface TopicDetailProps {

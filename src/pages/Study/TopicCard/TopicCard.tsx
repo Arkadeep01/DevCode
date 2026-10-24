@@ -1,14 +1,9 @@
 import { Button } from '../../../components/Button/Button';
 import { Card } from '../../../components/Card/Card';
-import { Tag, type TagVariant } from '../../../components/Tag/Tag';
-import type { StudyTopic, TopicTag } from '../../../types/topic';
+import { Tag } from '../../../components/Tag/Tag';
+import type { StudyTopic } from '../../../types/topic';
+import { TAG_META } from '../tagMeta';
 import './TopicCard.css';
-
-export const TAG_META: Record<TopicTag, { label: string; variant: TagVariant }> = {
-  high_freq: { label: 'High frequency', variant: 'warn' },
-  company_fav: { label: 'Company favorite', variant: 'flag' },
-  core: { label: 'Core concept', variant: 'info' },
-};
 
 interface TopicCardProps {
   topic: StudyTopic;

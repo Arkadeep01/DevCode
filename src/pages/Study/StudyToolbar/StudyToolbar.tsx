@@ -1,12 +1,13 @@
 import { TOPIC_CATEGORIES, countTopicsInCategory } from '../../../data/studyTopics';
+import { TAG_META } from '../tagMeta';
 import type { CategoryFilter, TagFilter } from '../useStudyFilters';
 import './StudyToolbar.css';
 
 const TAG_FILTERS: { value: TagFilter; label: string }[] = [
   { value: 'all', label: 'All flags' },
-  { value: 'high_freq', label: 'High frequency' },
-  { value: 'company_fav', label: 'Company favorite' },
-  { value: 'core', label: 'Core concept' },
+  { value: 'high_freq', label: TAG_META.high_freq.label },
+  { value: 'company_fav', label: TAG_META.company_fav.label },
+  { value: 'core', label: TAG_META.core.label },
 ];
 
 interface StudyToolbarProps {
