@@ -1,16 +1,16 @@
 # DevCode — Interview Prep, Reimagined
 
-DevCode is a developer-interview prep platform: a study hub with 15 topics and a full timed assessment engine backed by a 94-question bank. The UI is a React + TypeScript + Vite single-page app with light/dark theming, plain CSS design tokens, and no UI framework.
+DevCode is a developer-interview prep platform: a study hub with 15 topics and a full timed assessment engine backed by a 97-question bank. The UI is a React + TypeScript + Vite single-page app with light/dark theming, plain CSS design tokens, and no UI framework.
 
-The project is being extended into a full-stack app: an Express + TypeScript API with a SQLite database (Drizzle ORM) will power accounts, saved progress, and code submissions in the upcoming phases.
+The project is a full-stack app: an Express + TypeScript API with a SQLite database (Drizzle ORM) powers accounts today, with saved progress and code submissions planned for later phases.
 
 ## Tech stack
 
 | Layer | Technology |
 | --- | --- |
 | Frontend (current) | React 19, TypeScript 5.8, Vite 6, React Router 7, plain CSS + design tokens |
-| Backend | Node.js, Express, TypeScript, Zod-validated config; JWT auth with bcrypt lands in the schema phase |
-| Database | SQLite via Drizzle ORM (migrations committed as SQL; tables land in the schema phase) |
+| Backend | Node.js, Express, TypeScript, Zod-validated config; JWT auth with bcrypt |
+| Database | SQLite via Drizzle ORM (schema and SQL migrations committed) |
 | Tooling | npm, strict TypeScript, ESLint (flat config), Prettier |
 
 ## Repository layout
@@ -28,7 +28,7 @@ server/           Express API: bootstrap, config, Drizzle client + schema, migra
 server/
   src/config/env.ts   Zod-validated environment (fails fast at boot)
   src/db/client.ts    better-sqlite3 connection (WAL, foreign keys)
-  src/db/schema.ts    Drizzle schema (tables land in the schema phase)
+  src/db/schema.ts    Drizzle schema (users table and auth fields)
   src/app.ts          Express app: helmet, CORS, /api/health, JSON errors
   src/index.ts        bootstrap + graceful shutdown
   drizzle.config.ts   drizzle-kit config (SQLite, migrations in drizzle/)
@@ -147,7 +147,7 @@ Each hand-written file is kept under ~200 lines; when a bank grows, add a new fi
 
 1. **Structure & docs** _(done)_ — `.gitignore`, `README.md`. No folders are created until they are actually required.
 2. **Environment & config** _(done)_ — `.env.example` templates, ESLint/Prettier, server TypeScript + Drizzle configuration under `server/`.
-3. **Schema & auth** — SQLite schema/migrations for users, questions, submissions, and progress; signup/login routes with JWT; frontend auth views.
-4. **Features, one task per commit** — question bank & practice API/UI, code editor integration, feedback/evaluation, dashboard & analytics.
+3. **Schema & auth** _(backend done)_ — users table and migrations, bcrypt password hashing, JWT register/login/me routes, typed API client, auth provider and protected route; frontend login/signup screens are in progress.
+4. **Features, one task per commit** — frontend auth UI, question bank & practice API/UI, code editor integration, feedback/evaluation, dashboard & analytics.
 
 Commit convention: `chore:` for setup phases, `feat:` for feature work. Each phase is committed on its own before the next one starts.
