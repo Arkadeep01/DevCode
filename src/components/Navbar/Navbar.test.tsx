@@ -1,8 +1,27 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
+import { AuthContext, type AuthState } from '../../auth/AuthContext';
 import { ThemeProvider } from '../../theme/ThemeProvider';
 import { Navbar } from './Navbar';
+
+const USER = {
+  id: 1,
+  email: 'ada@example.com',
+  displayName: 'Ada Lovelace',
+  createdAt: '2026-01-01T00:00:00.000Z',
+};
+
+function authValue(overrides: Partial<AuthState> = {}): AuthState {
+  return {
+    status: 'anonymous',
+    user: null,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    ...overrides,
+  };
+}
 
 afterEach(cleanup);
 
@@ -15,12 +34,14 @@ function RouteControl() {
   );
 }
 
-function renderNavbar(path = '/') {
+function renderNavbar(path = '/', auth = authValue()) {
   render(
     <ThemeProvider>
       <MemoryRouter initialEntries={[path]}>
-        <Navbar />
-        <RouteControl />
+        <AuthContext.Provider value={auth}>
+          <Navbar />
+          <RouteControl />
+        </AuthContext.Provider>
       </MemoryRouter>
     </ThemeProvider>
   );
@@ -95,5 +116,33 @@ describe('Navbar mobile menu', () => {
 
     expect(panel().className).not.toContain('navbar__links--open');
     expect(screen.getByRole('button', { name: 'Open menu' })).toBeTruthy();
+  });
+});
+
+describe('Navbar auth state', () => {
+  it('offers login and signup links in the mobile menu when anonymous', () => {
+    renderNavbar('/study');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+
+    expect(within(panel()).getByRole('link', { name: 'Log in' }).getAttribute('href')).toBe(
+      '/login',
+    );
+    expect(within(panel()).getByRole('link', { name: 'Sign up' }).getAttribute('href')).toBe(
+      '/signup',
+    );
+  });
+
+  it('shows the user and logs out from the mobile menu', () => {
+    const logout = vi.fn();
+    renderNavbar('/study', authValue({ status: 'authenticated', user: USER, logout }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+
+    expect(within(panel()).getByText('Ada Lovelace')).toBeTruthy();
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Log out' }));
+
+    expect(logout).toHaveBeenCalledTimes(1);
+    expect(panel().className).not.toContain('navbar__links--open');
   });
 });

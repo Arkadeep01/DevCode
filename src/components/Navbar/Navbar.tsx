@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import type {
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
 } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { AuthContext } from '../../auth/AuthContext';
 import { ROUTES } from '../../routes';
 import { useScrollToSection } from '../../utils/scrollToSection';
 import { Button } from '../Button/Button';
@@ -18,6 +19,7 @@ export function Navbar() {
   const isHome = pathname === ROUTES.home;
   const scrollToSection = useScrollToSection();
   const guardNavigation = useGuardedNavigate();
+  const auth = useContext(AuthContext);
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
@@ -76,6 +78,41 @@ export function Navbar() {
     </Button>
   );
 
+  const authLinks = (modifier: 'mobile' | 'desktop') => {
+    if (auth?.status === 'loading') return null;
+
+    return (
+      <div className={`navbar__auth navbar__auth--${modifier}`}>
+        {auth?.status === 'authenticated' && auth.user ? (
+          <>
+            <span className="navbar__user" title={auth.user.displayName}>
+              {auth.user.displayName}
+            </span>
+            <Button
+              variant="subtle"
+              size="sm"
+              onClick={() => {
+                auth.logout();
+                closeMenu();
+              }}
+            >
+              Log out
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="ghost" size="sm" to={ROUTES.login}>
+              Log in
+            </Button>
+            <Button variant="subtle" size="sm" to={ROUTES.signup}>
+              Sign up
+            </Button>
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <nav className="navbar" aria-label="Main" onKeyDown={handleKeyDown}>
       <div className="navbar__inner">
@@ -88,9 +125,11 @@ export function Navbar() {
           {isHome && sectionLinks}
           {!isHome && routeLinks}
           {isHome ? practiceCta('mobile') : null}
+          {authLinks('mobile')}
         </div>
 
         <div className="navbar__actions">
+          {authLinks('desktop')}
           <ThemeToggle />
           {isHome ? practiceCta('desktop') : null}
           <button
