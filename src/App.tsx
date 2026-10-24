@@ -19,6 +19,14 @@ const PracticePage = lazy(() =>
   import('./pages/Practice/PracticePage').then((module) => ({ default: module.PracticePage })),
 );
 
+const LoginPage = lazy(() =>
+  import('./pages/Auth/LoginPage').then((module) => ({ default: module.LoginPage })),
+);
+
+const SignupPage = lazy(() =>
+  import('./pages/Auth/SignupPage').then((module) => ({ default: module.SignupPage })),
+);
+
 export function App() {
   return (
     <AuthProvider>
@@ -38,6 +46,8 @@ export function App() {
                 <Route path={ROUTES.home} element={<HomePage />} />
                 <Route path={ROUTES.study} element={<StudyPage />} />
                 <Route path={ROUTES.practice} element={<PracticePage />} />
+                <Route path={ROUTES.login} element={<LoginPage />} />
+                <Route path={ROUTES.signup} element={<SignupPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>

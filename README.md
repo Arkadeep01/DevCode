@@ -50,6 +50,7 @@ src/
     Home/            Hero, StatStrip, PathCards, DailyChallengeSection, CtaBand
     Study/           filters, topic cards, topic detail dialog, progress hooks
     Practice/        SetupScreen, QuizScreen, ResultsScreen, session hook
+    Auth/            login and signup forms
   styles/            tokens.css (colors/spacing), base.css, typography.css
   theme/             ThemeProvider + ThemeToggle (localStorage `devcode_theme`)
   types/             Question + StudyTopic types
@@ -147,7 +148,7 @@ Each hand-written file is kept under ~200 lines; when a bank grows, add a new fi
 
 1. **Structure & docs** _(done)_ — `.gitignore`, `README.md`. No folders are created until they are actually required.
 2. **Environment & config** _(done)_ — `.env.example` templates, ESLint/Prettier, server TypeScript + Drizzle configuration under `server/`.
-3. **Schema & auth** _(backend done)_ — users table and migrations, bcrypt password hashing, JWT register/login/me routes, typed API client, auth provider and protected route; frontend login/signup screens are in progress.
-4. **Features, one task per commit** — frontend auth UI, question bank & practice API/UI, code editor integration, feedback/evaluation, dashboard & analytics.
+3. **Schema & auth** _(done)_ — users table and migrations, bcrypt password hashing, JWT register/login/me routes, typed API client, auth provider, protected route and login/signup screens.
+4. **Features, one task per commit** — question bank & practice API/UI, code editor integration, feedback/evaluation, dashboard & analytics.
 
 Commit convention: `chore:` for setup phases, `feat:` for feature work. Each phase is committed on its own before the next one starts.
