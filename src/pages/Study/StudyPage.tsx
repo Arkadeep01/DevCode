@@ -3,6 +3,7 @@ import { Button } from '../../components/Button/Button';
 import { Eyebrow } from '../../components/Eyebrow/Eyebrow';
 import { useToast } from '../../components/Toast/ToastContext';
 import type { StudyTopic } from '../../types/topic';
+import { useDocumentTitle } from '../../utils/useDocumentTitle';
 import { StudyToolbar } from './StudyToolbar/StudyToolbar';
 import { TopicCard } from './TopicCard/TopicCard';
 import { TopicDetail } from './TopicDetail/TopicDetail';
@@ -11,6 +12,8 @@ import { useTopicProgress } from './useTopicProgress';
 import './StudyPage.css';
 
 export function StudyPage() {
+  useDocumentTitle('Study Hub | DevCode');
+
   const { category, setCategory, tag, setTag, query, setQuery, filtered, total } =
     useStudyFilters();
   const { mastered, bookmarks, toggleMastered, toggleBookmark } = useTopicProgress();

@@ -2,9 +2,12 @@ import { useLocation } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
 import { Eyebrow } from '../../components/Eyebrow/Eyebrow';
 import { ROUTES } from '../../routes';
+import { useDocumentTitle } from '../../utils/useDocumentTitle';
 import './NotFoundPage.css';
 
 export function NotFoundPage() {
+  useDocumentTitle('Page not found | DevCode');
+
   const { pathname } = useLocation();
 
   return (

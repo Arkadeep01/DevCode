@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
 import { useNavigationGuard } from '../../components/NavigationGuard/NavigationGuardContext';
+import { useDocumentTitle } from '../../utils/useDocumentTitle';
 import { QuizScreen } from './QuizScreen/QuizScreen';
 import { ResultsScreen } from './ResultsScreen/ResultsScreen';
 import { SetupScreen } from './SetupScreen/SetupScreen';
@@ -10,6 +11,8 @@ import { usePracticeSession } from './usePracticeSession';
 import './PracticePage.css';
 
 export function PracticePage() {
+  useDocumentTitle('Practice | DevCode');
+
   const [searchParams, setSearchParams] = useSearchParams();
   const [setup] = useState(() => parseSetupParams(searchParams));
   const autostartConsumed = useRef(false);
