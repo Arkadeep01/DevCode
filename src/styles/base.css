@@ -53,9 +53,16 @@ textarea {
   color: inherit;
 }
 
+input,
+select,
+textarea {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
 ::placeholder {
   color: var(--muted);
-  opacity: 1;
+  opacity: 0.8;
 }
 
 button {
@@ -86,7 +93,7 @@ ol {
 
 ::selection {
   background: var(--blue-soft);
-  color: var(--ink);
+  color: var(--heading);
 }
 
 * {
@@ -120,7 +127,3 @@ ol {
     transition-duration: 0.01ms !important;
   }
 }
-
-::selection { background: var(--blue-soft); color: var(--heading); }
-input, select, textarea { background: var(--surface); color: var(--ink); border-color: var(--border); }
-::placeholder { color: var(--muted); opacity: 0.8; }
