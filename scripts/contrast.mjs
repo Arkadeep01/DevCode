@@ -68,6 +68,13 @@ const checks = [
   ['muted on nav-bg/bg (navbar links)', 'muted', 'nav-bg/bg', 4.5],
   ['muted on nav-bg/section-dark (navbar over dark band)', 'muted', 'nav-bg/section-dark', 4.5],
   ['muted on surface-alt', 'muted', 'surface-alt', 4.5],
+  ['daily title on card (large)', 'heading', 'surface', 3.0],
+  ['daily description on card', 'muted', 'surface', 4.5],
+  ['daily category tag on card', 'link', 'blue-soft/surface', 4.5],
+  ['daily info tag on card', 'teal-text', 'teal-soft/surface', 4.5],
+  ['daily success tag on card', 'success', 'success-soft/surface', 4.5],
+  ['daily button label on primary', 'on-primary', 'primary', 4.5],
+  ['daily code text on code-bg', 'code-ink', 'code-bg', 4.5],
 ];
 
 function measure(tokens, foreground, background) {
