@@ -47,13 +47,23 @@ function compareFocusAreas(a: string | null, b: string | null): number {
 }
 
 function buildWeakTopics(misses: CoachMiss[]): CoachWeakTopic[] {
-  const buckets = new Map<string, { focusArea: string | null; topicId: string | null; misses: number }>();
+  const buckets = new Map<
+    string,
+    { focusArea: string | null; topicId: string | null; category: string | null; misses: number }
+  >();
 
   for (const miss of misses) {
     const key = miss.focusArea ?? miss.questionId;
-    const bucket = buckets.get(key) ?? { focusArea: miss.focusArea, topicId: miss.topicId, misses: 0 };
+    const bucket =
+      buckets.get(key) ?? {
+        focusArea: miss.focusArea,
+        topicId: miss.topicId,
+        category: miss.category,
+        misses: 0,
+      };
     bucket.misses += 1;
     if (bucket.topicId === null) bucket.topicId = miss.topicId;
+    if (bucket.category === null) bucket.category = miss.category;
     buckets.set(key, bucket);
   }
 
@@ -62,6 +72,7 @@ function buildWeakTopics(misses: CoachMiss[]): CoachWeakTopic[] {
     .map((bucket) => ({
       topicId: bucket.topicId,
       focusArea: bucket.focusArea,
+      category: bucket.category,
       misses: bucket.misses,
       severity: bucket.misses,
     }))
@@ -72,6 +83,7 @@ function buildWeakTopics(misses: CoachMiss[]): CoachWeakTopic[] {
   return entries.map((entry, index) => ({
     topicId: entry.topicId,
     focusArea: entry.focusArea,
+    category: entry.category,
     misses: entry.misses,
     severity: maxMisses > 0 ? entry.misses / maxMisses : 0,
     priority: index + 1,
@@ -94,6 +106,7 @@ export function buildCoachContext(input: CoachContextInput): CoachContext {
       questionId: question.questionId,
       topicId: question.topicId,
       focusArea: question.focusArea,
+      category: question.category,
       selectedAnswer: question.selectedAnswer,
       correctAnswer: question.correctAnswer,
       explanation: question.explanation,

@@ -27,6 +27,7 @@ export interface CoachMiss {
   questionId: string;
   topicId: string | null;
   focusArea: string | null;
+  category: string | null;
   selectedAnswer: number | null;
   correctAnswer: number | null;
   explanation: string | null;
@@ -35,6 +36,7 @@ export interface CoachMiss {
 export interface CoachWeakTopic {
   topicId: string | null;
   focusArea: string | null;
+  category: string | null;
   misses: number;
   severity: number;
   priority: number;
