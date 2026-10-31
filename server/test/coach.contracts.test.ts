@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CoachCategorySchema,
   CoachDifficultySchema,
-  CoachExplanationSchema,
-  CoachPracticeQuestionSchema,
+
   CoachRequestSchema,
   CoachResponseSchema,
   CoachStudyPlanItemSchema,

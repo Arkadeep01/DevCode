@@ -3,6 +3,8 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import helmet from 'helmet';
 import { allowedOrigins, env } from './config/env.js';
 import { sqlite } from './db/client.js';
+import { CoachError } from './coach/errors.js';
+import { coachRouter } from './routes/coach.js';
 import { authRouter } from './routes/auth.js';
 
 /**
@@ -30,13 +32,19 @@ export function createApp() {
 
   app.use('/api/auth', authRouter);
 
+  app.use('/api/coach', coachRouter);
+
   // Unknown route.
   app.use((_req, res) => {
     res.status(404).json({ error: 'Not found' });
   });
 
-  // Central error handler — keeps responses JSON-shaped for the SPA.
+  // Central error handler - keeps responses JSON-shaped for the SPA.
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    if (error instanceof CoachError) {
+      res.status(error.statusCode).json({ error: error.message });
+      return;
+    }
     console.error('[devcode-api] unhandled error:', error);
     res.status(500).json({ error: 'Internal server error' });
   });

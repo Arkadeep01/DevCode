@@ -13,6 +13,14 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1).default('./data/devcode.sqlite'),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters long'),
   JWT_EXPIRES_IN: z.string().min(1).default('7d'),
+  COACH_PROVIDER: z.enum(['mock', 'openai']).default('mock'),
+  COACH_MODEL: z.string().min(1).max(120).default('gpt-4o-mini'),
+  COACH_API_KEY: z.string().min(1).max(256).optional(),
+  COACH_BASE_URL: z.string().min(1).max(512).default('https://api.openai.com/v1'),
+  COACH_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().max(2048).default(700),
+  COACH_DAILY_TOKEN_BUDGET: z.coerce.number().int().positive().max(100000).default(50000),
+  COACH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+  COACH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
 });
 
 export type Env = z.infer<typeof envSchema>;
