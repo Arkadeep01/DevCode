@@ -51,6 +51,35 @@ export const submissions = sqliteTable(
   ],
 );
 
+
+/**
+ * A persisted quiz attempt: one row per user / quiz run / question, capturing
+ * the canonical correctness resolved at submission time.
+ */
+export const attempts = sqliteTable(
+  'attempts',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    quizId: text('quiz_id').notNull(),
+    questionId: integer('question_id').references(() => questions.id, { onDelete: 'set null' }),
+    chosenAnswer: integer('chosen_answer'),
+    correctAnswer: integer('correct_answer'),
+    isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
+    isSkipped: integer('is_skipped', { mode: 'boolean' }).notNull().default(false),
+    track: text('track').notNull(),
+    difficulty: text('difficulty').notNull(),
+    focusArea: text('focus_area'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  },
+  (table) => [
+    index('attempts_user_idx').on(table.userId),
+    index('attempts_quiz_idx').on(table.quizId),
+    uniqueIndex('attempts_user_quiz_question_unique').on(table.userId, table.quizId, table.questionId),
+  ],
+);
 /** Per-user study state for one topic: exactly one row per (user, topic). */
 export const progress = sqliteTable(
   'progress',

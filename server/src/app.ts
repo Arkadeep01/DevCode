@@ -6,6 +6,7 @@ import { sqlite } from './db/client.js';
 import { CoachError } from './coach/errors.js';
 import { coachRouter } from './routes/coach.js';
 import { authRouter } from './routes/auth.js';
+import { attemptsRouter } from './routes/attempts.js';
 
 /**
  * Builds the Express application without binding a port, so tests can import
@@ -33,6 +34,8 @@ export function createApp() {
   app.use('/api/auth', authRouter);
 
   app.use('/api/coach', coachRouter);
+
+  app.use('/api/attempts', attemptsRouter);
 
   // Unknown route.
   app.use((_req, res) => {
