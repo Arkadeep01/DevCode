@@ -152,6 +152,29 @@
   color: var(--muted);
 }
 
+/* AI coach */
+.results__coach-status {
+  min-height: 1.25rem;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.results__error {
+  margin: 0;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
+.results__coach-retry {
+  display: flex;
+  gap: var(--space-xs);
+}
+
 @media (max-width: 640px) {
   .results {
     padding-inline: var(--space-md);

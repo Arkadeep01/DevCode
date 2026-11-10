@@ -1,5 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, fetchMe, getToken, login, register, setToken } from './api';
+import {
+  ApiError,
+  fetchMe,
+  getCoachResponse,
+  getToken,
+  login,
+  persistQuizAttempt,
+  register,
+  setToken,
+} from './api';
 
 const USER = {
   id: 1,
@@ -114,5 +123,105 @@ describe('api client', () => {
     expect(getToken()).toBe('abc');
     setToken(null);
     expect(getToken()).toBeNull();
+  });
+});
+
+describe('api client — coach', () => {
+  it('posts the coach request and parses the response', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        explanations: [
+          {
+            questionId: 'dsa-b1',
+            whyWrong: 'Wrong complexity.',
+            concept: 'Big-O',
+            explanation: 'Canonical.',
+          },
+        ],
+        studyPlan: [{ topicId: 'dsa-sliding-window', reason: 'Two misses.', priority: 1 }],
+        practiceQuestions: [
+          {
+            id: 'coach-q-1',
+            category: 'dsa',
+            categoryLabel: 'Data Structures & Algorithms',
+            difficulty: 'Intermediate',
+            question: 'Generated?',
+            codeSnippet: null,
+            options: ['A', 'B'],
+            correctIndex: 0,
+            explanation: 'Because.',
+            focusArea: 'Focus Area: Arrays',
+            aiGenerated: true,
+          },
+        ],
+        cached: false,
+      }),
+    );
+
+    const input = {
+      attemptId: 'attempt-1',
+      questions: [{ questionId: 'dsa-b1', selectedAnswer: 1 }],
+    };
+    const response = await getCoachResponse(input);
+
+    const [url, init] = firstCall();
+    expect(String(url)).toBe('/api/coach');
+    expect(init?.method).toBe('POST');
+    expect(init?.body).toBe(JSON.stringify(input));
+
+    expect(response.explanations).toHaveLength(1);
+    expect(response.studyPlan[0]?.topicId).toBe('dsa-sliding-window');
+    expect(response.practiceQuestions[0]?.aiGenerated).toBe(true);
+    expect(response.cached).toBe(false);
+  });
+
+  it('drops malformed entries from the coach payload', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        explanations: [{ questionId: 'dsa-b1', whyWrong: 'ok' }],
+        studyPlan: [{ topicId: 'dsa-sliding-window' }],
+        practiceQuestions: [{ id: 'broken' }],
+      }),
+    );
+
+    const response = await getCoachResponse({
+      questions: [{ questionId: 'dsa-b1', selectedAnswer: 0 }],
+    });
+
+    expect(response.explanations).toEqual([]);
+    expect(response.studyPlan).toEqual([]);
+    expect(response.practiceQuestions).toEqual([]);
+  });
+
+  it('surfaces the coach error message from the server', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ error: 'Rate limit exceeded' }, 429));
+
+    const error: unknown = await getCoachResponse({
+      questions: [{ questionId: 'dsa-b1', selectedAnswer: 0 }],
+    }).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ApiError);
+    if (!(error instanceof ApiError)) return;
+    expect(error.status).toBe(429);
+    expect(error.message).toBe('Rate limit exceeded');
+  });
+
+  it('persists a finished quiz attempt', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ success: true, created: 1, skipped: 0 }, 201));
+
+    await persistQuizAttempt({
+      attemptId: 'attempt-1',
+      questions: [{ questionId: 'dsa-b1', selectedIndex: 1 }],
+    });
+
+    const [url, init] = firstCall();
+    expect(String(url)).toBe('/api/attempts');
+    expect(init?.method).toBe('POST');
+    expect(init?.body).toBe(
+      JSON.stringify({
+        attemptId: 'attempt-1',
+        questions: [{ questionId: 'dsa-b1', selectedIndex: 1 }],
+      }),
+    );
   });
 });

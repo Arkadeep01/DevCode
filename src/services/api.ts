@@ -1,4 +1,6 @@
 import { STORAGE_KEYS } from '../utils/storage';
+import { isCoachPracticeQuestion } from '../utils/coachQuestion';
+import type { Difficulty, QuestionCategory } from '../types/question';
 
 export interface AuthUser {
   id: number;
@@ -154,4 +156,133 @@ export async function fetchMe(): Promise<AuthUser> {
   const payload = await request('/auth/me');
   const record = asRecord(payload);
   return parseUser(record?.['user']);
+}
+
+export interface PersistAttemptRequest {
+  attemptId: string;
+  questions: Array<{
+    questionId: string;
+    selectedIndex: number | null;
+  }>;
+}
+
+export async function persistQuizAttempt(payload: PersistAttemptRequest): Promise<void> {
+  await request('/attempts', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface CoachRequest {
+  attemptId?: string;
+  questions: Array<{
+    questionId: string;
+    selectedAnswer: number | null;
+  }>;
+}
+
+export interface CoachExplanation {
+  questionId: string;
+  whyWrong: string;
+  concept: string;
+  explanation: string;
+}
+
+export interface CoachStudyPlanItem {
+  topicId: string;
+  reason: string;
+  priority: number;
+}
+
+export interface CoachPracticeQuestion {
+  id: string;
+  category: QuestionCategory;
+  categoryLabel: string;
+  difficulty: Difficulty;
+  question: string;
+  codeSnippet: string | null;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+  focusArea: string;
+  aiGenerated: true;
+}
+
+export interface CoachResponse {
+  explanations: CoachExplanation[];
+  studyPlan: CoachStudyPlanItem[];
+  practiceQuestions: CoachPracticeQuestion[];
+  /** True when the response was served from the server cache. */
+  cached?: boolean;
+}
+
+function parseCoachExplanation(value: unknown): CoachExplanation | null {
+  const record = asRecord(value);
+  if (!record) return null;
+  const { questionId, whyWrong, concept, explanation } = record;
+  if (
+    typeof questionId !== 'string' ||
+    typeof whyWrong !== 'string' ||
+    typeof concept !== 'string' ||
+    typeof explanation !== 'string'
+  ) {
+    return null;
+  }
+  return { questionId, whyWrong, concept, explanation };
+}
+
+function parseStudyPlanItem(value: unknown): CoachStudyPlanItem | null {
+  const record = asRecord(value);
+  if (!record) return null;
+  const { topicId, reason, priority } = record;
+  if (
+    typeof topicId !== 'string' ||
+    typeof reason !== 'string' ||
+    typeof priority !== 'number'
+  ) {
+    return null;
+  }
+  return { topicId, reason, priority };
+}
+
+/**
+ * Validates the coach payload before the UI trusts it. Malformed entries are
+ * dropped; a payload without the three collections is treated as an error.
+ */
+export function parseCoachResponse(payload: unknown): CoachResponse {
+  const record = asRecord(payload);
+  if (!record) {
+    throw new ApiError('Unexpected coach payload', 500);
+  }
+
+  const explanations = Array.isArray(record['explanations'])
+    ? record['explanations']
+        .map(parseCoachExplanation)
+        .filter((item): item is CoachExplanation => item !== null)
+    : [];
+
+  const studyPlan = Array.isArray(record['studyPlan'])
+    ? record['studyPlan']
+        .map(parseStudyPlanItem)
+        .filter((item): item is CoachStudyPlanItem => item !== null)
+    : [];
+
+  const practiceQuestions = Array.isArray(record['practiceQuestions'])
+    ? record['practiceQuestions'].filter(isCoachPracticeQuestion)
+    : [];
+
+  return {
+    explanations,
+    studyPlan,
+    practiceQuestions,
+    cached: record['cached'] === true,
+  };
+}
+
+export async function getCoachResponse(payload: CoachRequest): Promise<CoachResponse> {
+  const result = await request('/coach', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return parseCoachResponse(result);
 }

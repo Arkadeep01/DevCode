@@ -29,6 +29,7 @@ export function PracticePage() {
     elapsed,
     recoverable,
     start,
+    startWithQuestions,
     resume,
     discardRecovery,
     answer,
@@ -122,6 +123,7 @@ export function PracticePage() {
         onRetakeSame={retakeSame}
         onNewQuiz={newQuiz}
         onRetryMissed={retryMissed}
+        onPracticeAiQuestions={startWithQuestions}
       />
     );
   }

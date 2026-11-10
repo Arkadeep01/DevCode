@@ -1,0 +1,325 @@
+.coach-panel {
+  margin-top: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.coach-panel:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.coach-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border);
+}
+
+.coach-panel__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.coach-panel__cached {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
+  color: var(--muted);
+}
+
+.coach-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.coach-panel__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.coach-panel__badge {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--blue-soft);
+  color: var(--link);
+}
+
+/* Explanations */
+.coach-panel__explanations {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.coach-panel__explanation {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.coach-panel__exp-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-hover);
+  cursor: pointer;
+  list-style: none;
+}
+
+.coach-panel__exp-summary::-webkit-details-marker {
+  display: none;
+}
+
+.coach-panel__exp-question-id {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  flex: 1;
+}
+
+.coach-panel__exp-concept {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--link);
+  background: var(--blue-soft);
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
+}
+
+.coach-panel__exp-body {
+  padding: var(--space-md);
+}
+
+.coach-panel__exp-why-wrong,
+.coach-panel__exp-explanation {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--ink);
+}
+
+.coach-panel__exp-explanation:last-child {
+  margin-bottom: 0;
+}
+
+/* Study plan */
+.coach-panel__study-plan {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.coach-panel__study-item {
+  padding: var(--space-md);
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.coach-panel__study-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.coach-panel__study-priority {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--link);
+  background: var(--blue-soft);
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
+}
+
+.coach-panel__study-topic-id {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.coach-panel__study-reason {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--ink);
+}
+
+.coach-panel__study-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+/* Practice questions */
+.coach-panel__practice-questions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.coach-panel__practice-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.coach-panel__practice-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-hover);
+  cursor: pointer;
+  list-style: none;
+}
+
+.coach-panel__practice-summary::-webkit-details-marker {
+  display: none;
+}
+
+.coach-panel__practice-number {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.coach-panel__practice-body {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.coach-panel__practice-question {
+  margin: 0;
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  color: var(--ink);
+}
+
+.coach-panel__code {
+  margin: 0;
+}
+
+.coach-panel__practice-options {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.coach-panel__practice-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.coach-panel__practice-option--correct {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+
+.coach-panel__practice-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  font-weight: 600;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-radius: var(--radius-xs);
+}
+
+.coach-panel__practice-option--correct .coach-panel__practice-letter {
+  color: var(--success);
+  background: var(--success-soft);
+}
+
+.coach-panel__practice-explanation,
+.coach-panel__practice-focus {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--ink);
+}
+
+.coach-panel__practice-focus {
+  color: var(--muted);
+}
+
+.coach-panel__ai-badge {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--link);
+  background: var(--blue-soft);
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
+}
+
+.coach-panel__practice-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.coach-panel__empty {
+  padding: var(--space-lg);
+  text-align: center;
+  color: var(--muted);
+}
+
+.coach-panel__empty p {
+  margin: 0;
+}

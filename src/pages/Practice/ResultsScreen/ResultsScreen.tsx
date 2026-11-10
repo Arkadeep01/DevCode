@@ -1,8 +1,13 @@
+import { useCallback, useRef, useState } from 'react';
 import { Button } from '../../../components/Button/Button';
 import { Eyebrow } from '../../../components/Eyebrow/Eyebrow';
+import { ApiError, getCoachResponse, type CoachResponse } from '../../../services/api';
+import { toBankQuestions } from '../../../utils/coachQuestion';
+import type { Question } from '../../../types/question';
 import type { PracticeResult } from '../practiceTypes';
 import { formatDuration } from '../formatDuration';
 import { ResultsReview } from './ResultsReview';
+import { CoachResponsePanel } from './CoachResponsePanel';
 import './ResultsScreen.css';
 
 interface ResultsScreenProps {
@@ -11,7 +16,11 @@ interface ResultsScreenProps {
   onRetakeSame: () => void;
   onNewQuiz: () => void;
   onRetryMissed: () => void;
+  /** Starts a practice session built from the AI-generated questions. */
+  onPracticeAiQuestions?: ((questions: Question[]) => void) | undefined;
 }
+
+type CoachStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 export function ResultsScreen({
   result,
@@ -19,8 +28,57 @@ export function ResultsScreen({
   onRetakeSame,
   onNewQuiz,
   onRetryMissed,
+  onPracticeAiQuestions,
 }: ResultsScreenProps) {
   const missedCount = result.review.filter((item) => !item.correct).length;
+
+  const [coachStatus, setCoachStatus] = useState<CoachStatus>('idle');
+  const [coachResponse, setCoachResponse] = useState<CoachResponse | null>(null);
+  const [coachError, setCoachError] = useState<string | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const requestCoach = useCallback(async () => {
+    setCoachStatus('loading');
+    setCoachError(null);
+
+    try {
+      const response = await getCoachResponse({
+        attemptId: `attempt-${result.review.length}-${result.score}-${result.total}`,
+        questions: result.review.map((item) => ({
+          questionId: item.question.id,
+          selectedAnswer: item.selected,
+        })),
+      });
+
+      setCoachResponse(response);
+      setCoachStatus('ready');
+      // Move focus to the new panel so keyboard and screen-reader users land
+      // on the result instead of staying on the (now disabled) trigger.
+      window.requestAnimationFrame(() => panelRef.current?.focus());
+    } catch (error) {
+      const message =
+        error instanceof ApiError || error instanceof Error
+          ? error.message
+          : 'The coach is unavailable right now.';
+      setCoachError(message);
+      setCoachStatus('error');
+    }
+  }, [result]);
+
+  const dismissCoach = useCallback(() => {
+    setCoachStatus('idle');
+    setCoachResponse(null);
+    setCoachError(null);
+  }, []);
+
+  const startAiPractice = useCallback(() => {
+    if (!coachResponse || !onPracticeAiQuestions) return;
+    const questions = toBankQuestions(coachResponse.practiceQuestions);
+    if (questions.length === 0) return;
+    onPracticeAiQuestions(questions);
+  }, [coachResponse, onPracticeAiQuestions]);
+
+  const coachBusy = coachStatus === 'loading';
 
   return (
     <div className="results">
@@ -55,8 +113,44 @@ export function ResultsScreen({
           <Button variant="ghost" onClick={onNewQuiz}>
             New quiz
           </Button>
+          {missedCount > 0 ? (
+            <Button
+              variant="teal"
+              onClick={requestCoach}
+              disabled={coachBusy || coachStatus === 'ready'}
+            >
+              {coachBusy ? 'Coaching…' : 'Coach me on my misses'}
+            </Button>
+          ) : null}
         </div>
+        <p className="results__coach-status" role="status">
+          {coachStatus === 'loading' ? 'The coach is reviewing your answers…' : ''}
+        </p>
+        {coachStatus === 'error' && coachError ? (
+          <p className="results__error" role="alert">
+            {coachError}
+          </p>
+        ) : null}
+        {coachStatus === 'error' ? (
+          <div className="results__coach-retry">
+            <Button size="sm" variant="outline" onClick={requestCoach}>
+              Try the coach again
+            </Button>
+          </div>
+        ) : null}
       </header>
+
+      {coachStatus === 'ready' && coachResponse ? (
+        <div ref={panelRef} tabIndex={-1}>
+          <CoachResponsePanel
+            response={coachResponse}
+            onPracticeQuestions={
+              onPracticeAiQuestions ? startAiPractice : undefined
+            }
+            onDismiss={dismissCoach}
+          />
+        </div>
+      ) : null}
 
       <section className="results__stats" aria-label="Score summary">
         <div className="results__stat">

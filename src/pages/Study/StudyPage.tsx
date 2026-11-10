@@ -1,7 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
 import { Eyebrow } from '../../components/Eyebrow/Eyebrow';
 import { useToast } from '../../components/Toast/ToastContext';
+import { STUDY_TOPICS } from '../../data/studyTopics';
 import type { StudyTopic } from '../../types/topic';
 import { useDocumentTitle } from '../../utils/useDocumentTitle';
 import { StudyToolbar } from './StudyToolbar/StudyToolbar';
@@ -18,7 +20,44 @@ export function StudyPage() {
     useStudyFilters();
   const { mastered, bookmarks, toggleMastered, toggleBookmark } = useTopicProgress();
   const [selected, setSelected] = useState<StudyTopic | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
+
+  // Deep link support: /study?topic=<topicId> opens that topic directly, so
+  // the AI coach study plan can link straight into the right topic.
+  const requestedTopicId = searchParams.get('topic');
+
+  useEffect(() => {
+    if (!requestedTopicId) return;
+    const topic = STUDY_TOPICS.find((candidate) => candidate.id === requestedTopicId);
+    if (!topic) {
+      // Unknown topic: drop it from the URL so the page never lies.
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          next.delete('topic');
+          return next;
+        },
+        { replace: true },
+      );
+      return;
+    }
+    setSelected(topic);
+  }, [requestedTopicId, setSearchParams]);
+
+  const closeDetail = useCallback(() => {
+    setSelected(null);
+    if (requestedTopicId) {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          next.delete('topic');
+          return next;
+        },
+        { replace: true },
+      );
+    }
+  }, [requestedTopicId, setSearchParams]);
 
   const handleToggleMastered = (topic: StudyTopic) => {
     const { added } = toggleMastered(topic.id);
@@ -35,8 +74,6 @@ export function StudyPage() {
     setTag('all');
     setQuery('');
   };
-
-  const closeDetail = useCallback(() => setSelected(null), []);
 
   return (
     <div className="study">

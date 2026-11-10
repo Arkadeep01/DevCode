@@ -8,6 +8,7 @@ import {
   SESSION_KEYS,
   writeSessionJson,
 } from '../../utils/storage';
+import { persistQuizAttempt } from '../../services/api';
 import type { Question, SessionQuestion } from '../../types/question';
 import type { PracticeConfig, PracticePhase, PracticeResult } from './practiceTypes';
 import { computeResult } from './computeResult';
@@ -147,7 +148,7 @@ export function usePracticeSession() {
   }, []);
 
   const finish = useCallback(
-    (sessionQuestions: SessionQuestion[], sessionAnswers: (number | null)[], sessionFlags: boolean[]) => {
+    async (sessionQuestions: SessionQuestion[], sessionAnswers: (number | null)[], sessionFlags: boolean[]) => {
       if (!config || submittedRef.current) return;
       submittedRef.current = true;
       const { result: nextResult, attempt } = computeResult(
@@ -161,6 +162,19 @@ export function usePracticeSession() {
       setPhase('results');
       saveQuizAttempt(attempt);
       clearDraft();
+
+      // Persist attempt to server (fire and forget)
+      try {
+        const attemptId = `attempt-${startedAtRef.current}`;
+        const questionsPayload = sessionQuestions.map((q, index) => ({
+          questionId: q.id,
+          selectedIndex: sessionAnswers[index] ?? null,
+        }));
+        await persistQuizAttempt({ attemptId, questions: questionsPayload });
+      } catch (error) {
+        // Log but don't block the UI - localStorage already has the attempt
+        console.warn('Failed to persist attempt to server:', error);
+      }
     },
     [config],
   );
@@ -175,6 +189,33 @@ export function usePracticeSession() {
   const start = useCallback(
     (nextConfig: PracticeConfig) => {
       beginSession(nextConfig, buildSession(nextConfig));
+    },
+    [beginSession],
+  );
+
+  /**
+   * Starts a session from an explicit question list (used for the AI-generated
+   * practice questions). The questions go through the same shuffling and
+   * index-remapping as bank questions, so there is only one quiz engine.
+   */
+  const startWithQuestions = useCallback(
+    (questionList: Question[]) => {
+      if (questionList.length === 0) return;
+      const session = questionList.map(toSessionQuestion);
+      const tracks = Array.from(new Set(questionList.map((question) => question.category)));
+      const difficulties = new Set(questionList.map((question) => question.difficulty));
+      const difficulty =
+        difficulties.size === 1 ? (questionList[0]?.difficulty ?? 'Mixed') : 'Mixed';
+
+      beginSession(
+        {
+          tracks,
+          difficulty,
+          count: session.length,
+          untimed: true,
+        },
+        session,
+      );
     },
     [beginSession],
   );
@@ -272,6 +313,7 @@ export function usePracticeSession() {
     elapsed,
     recoverable,
     start,
+    startWithQuestions,
     resume,
     discardRecovery,
     answer,
