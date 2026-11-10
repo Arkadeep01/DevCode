@@ -15,6 +15,13 @@
       "when": 1793448704130,
       "tag": "0001_yellow_darkhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794318031461,
+      "tag": "0002_bumpy_mojo",
+      "breakpoints": true
     }
   ]
 }

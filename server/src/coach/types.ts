@@ -58,7 +58,8 @@ export interface CoachFocusAreaStat {
   topicId: string | null;
   attempts: number;
   misses: number;
-  accuracy: number;
+  /** null when there is no denominator (no attempts counted). */
+  accuracy: number | null;
 }
 
 /** Aggregated weekly performance window. */

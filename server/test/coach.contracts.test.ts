@@ -117,6 +117,7 @@ describe('CoachResponseSchema', () => {
           correctIndex: 2,
           explanation: 'Both approaches are valid.',
           focusArea: 'Focus Area: Linked List Reversal',
+          aiGenerated: true,
         },
       ],
     };
@@ -179,6 +180,7 @@ describe('CoachResponseSchema', () => {
           correctIndex: 0,
           explanation: 'Because.',
           focusArea: 'Focus Area: X',
+          aiGenerated: true,
         },
       ],
     });
@@ -202,6 +204,7 @@ describe('CoachResponseSchema', () => {
           correctIndex: 0,
           explanation: 'Because.',
           focusArea: 'Focus Area: X',
+          aiGenerated: true,
         },
       ],
     });
@@ -225,6 +228,7 @@ describe('CoachResponseSchema', () => {
           correctIndex: 0,
           explanation: 'Because.',
           focusArea: 'Focus Area: X',
+          aiGenerated: true,
         },
       ],
     });
@@ -244,6 +248,7 @@ describe('CoachResponseSchema', () => {
       correctIndex: 0,
       explanation: 'Because.',
       focusArea: 'Focus Area: X',
+      aiGenerated: true as const,
     };
     const parsed = CoachResponseSchema.safeParse({
       explanations: [],

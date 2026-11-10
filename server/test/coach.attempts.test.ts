@@ -18,12 +18,22 @@ async function registerCoachUser(): Promise<string> {
   return response.body.token;
 }
 
-function seedCoachQuestion(slug: string) {
-  return sqlite.prepare(`
+function seedCoachQuestion(slug: string): { id: number; slug: string } {
+  return sqlite
+    .prepare(`
     INSERT INTO questions (slug, category, difficulty, prompt, options, correct_index, explanation)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-    RETURNING *
-  `).get(slug, 'dsa', 'Intermediate', 'What is the main use of recursion?', JSON.stringify(['Option 1', 'Option 2', 'Option 3', 'Option 4']), 0, 'Mock explanation');
+    RETURNING id, slug
+  `)
+    .get(
+      slug,
+      'dsa',
+      'Intermediate',
+      'What is the main use of recursion?',
+      JSON.stringify(['Option 1', 'Option 2', 'Option 3', 'Option 4']),
+      0,
+      'Mock explanation',
+    ) as { id: number; slug: string };
 }
 
 beforeEach(() => {

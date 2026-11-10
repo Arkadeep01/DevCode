@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { calculateCoachAnalytics } from '../src/coach/analytics.js';
+import type { Attempt, Question } from '../src/db/schema.js';
 
 describe('calculateCoachAnalytics', () => {
   it('returns empty analytics for empty attempts and questions', () => {
-    const attempts = [];
-    const questions = [];
+    const attempts: Attempt[] = [];
+    const questions: Question[] = [];
     const analytics = calculateCoachAnalytics(attempts, questions);
 
     expect(analytics.topicPerformance).toEqual({});

@@ -21,6 +21,8 @@ const envSchema = z.object({
   COACH_DAILY_TOKEN_BUDGET: z.coerce.number().int().positive().max(100000).default(50000),
   COACH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   COACH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
+  COACH_CACHE_TTL_MS: z.coerce.number().int().positive().max(86_400_000).default(3_600_000),
+  COACH_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().max(120_000).default(30_000),
 });
 
 export type Env = z.infer<typeof envSchema>;

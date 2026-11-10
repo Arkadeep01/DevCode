@@ -23,6 +23,8 @@ export const questions = sqliteTable('questions', {
   options: text('options', { mode: 'json' }).$type<string[]>().notNull(),
   correctIndex: integer('correct_index').notNull(),
   explanation: text('explanation'),
+  /** Study focus area, e.g. "Focus Area: Two Sum Hash Map Linear Scan". */
+  focusArea: text('focus_area'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 });
 
@@ -122,3 +124,5 @@ export type Submission = typeof submissions.$inferSelect;
 export type NewSubmission = typeof submissions.$inferInsert;
 export type Progress = typeof progress.$inferSelect;
 export type NewProgress = typeof progress.$inferInsert;
+export type Attempt = typeof attempts.$inferSelect;
+export type NewAttempt = typeof attempts.$inferInsert;
