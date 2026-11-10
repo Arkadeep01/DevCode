@@ -16,4 +16,12 @@ export default defineConfig({
       '/api': 'http://localhost:4000',
     },
   },
+  // `npm run preview` serves the production build; proxy the API there too so
+  // the SPA keeps working without a VITE_API_BASE_URL.
+  preview: {
+    port: 3000,
+    proxy: {
+      '/api': 'http://localhost:4000',
+    },
+  },
 });

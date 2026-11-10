@@ -61,35 +61,59 @@ Pages never import each other; shared UI lives in `components/`, data in `data/`
 
 ## How to run
 
-### Frontend (repository root)
+Both servers are needed: the SPA calls the API, and the API owns the database.
 
-```bash
-npm install
-npm run dev        # http://localhost:3000
-npm run build      # tsc --noEmit && vite build
-npm run preview    # serve the production build
-npm run typecheck  # tsc --noEmit
-npm run lint       # eslint .
-npm run format     # prettier --write .
-```
-
-### API (`server/`)
+### 1. API (`server/`) — terminal 1
 
 ```bash
 cd server
 npm install
-cp .env.example .env   # then adjust values if needed
-npm run dev            # tsx watch -> http://localhost:4000/api/health
+cp .env.example .env        # the template works as-is; JWT_SECRET is the only value worth changing
+npm run db:migrate           # create/upgrade server/data/devcode.sqlite
+npm run db:seed              # copy the 97-question bank into the questions table
+npm run dev                  # tsx watch -> http://localhost:4000/api/health
+```
+
+### 2. Frontend (repository root) — terminal 2
+
+```bash
+npm install
+npm run dev                  # vite -> http://localhost:3000
+```
+
+The SPA calls the relative path `/api`, which the Vite dev server proxies to
+`http://localhost:4000`, so no extra configuration is required. To point the
+SPA at another API host instead, set `VITE_API_BASE_URL` in a root `.env`
+(see `.env.example`); the origins allowed by CORS are listed in
+`server/.env` as `CORS_ORIGIN`.
+
+> The login page reports **"Unable to connect. Please try again."** when the
+> API is not running or is not reachable from the browser. Check
+> `http://localhost:4000/api/health` first.
+
+### Other scripts
+
+```bash
+# Frontend
+npm run build      # tsc --noEmit && vite build
+npm run preview    # serve the production build (also proxies /api)
+npm run typecheck  # tsc --noEmit
+npm run lint       # eslint .
+npm run format     # prettier --write .
+
+# API
 npm run build          # tsc -> dist/
 npm run start          # node dist/index.js
 npm run typecheck      # tsc --noEmit
-npm run lint           # eslint src
+npm run lint           # eslint src test
 npm run db:generate    # drizzle-kit generate (after schema changes)
 npm run db:migrate     # apply migrations
 npm run db:studio      # inspect the SQLite database
+npm run db:seed        # sync the question bank into the database
+npm run coach:smoke    # end-to-end check of the AI coach pipeline
 ```
 
-Run both dev servers side by side: the SPA on `:3000` reads `VITE_API_BASE_URL` (default `http://localhost:4000/api`).
+Run both dev servers side by side: the SPA on `:3000` proxies `/api` to the API on `:4000`.
 
 ## API endpoints
 
@@ -106,10 +130,10 @@ Templates: `.env.example` at the root (frontend) and `server/.env.example` (API)
 
 | Variable | Where | Default | Purpose |
 | --- | --- | --- | --- |
-| `VITE_API_BASE_URL` | frontend | `http://localhost:4000/api` | Base URL the SPA calls |
+| `VITE_API_BASE_URL` | frontend | `/api` (proxied) | Base URL the SPA calls; leave unset in dev so the Vite proxy is used |
 | `NODE_ENV` | server | `development` | `development` / `test` / `production` |
 | `PORT` | server | `4000` | API listen port |
-| `CORS_ORIGIN` | server | `http://localhost:3000` | Comma-separated allowed browser origins |
+| `CORS_ORIGIN` | server | `http://localhost:3000,http://127.0.0.1:3000` | Comma-separated allowed browser origins |
 | `DATABASE_URL` | server | `./data/devcode.sqlite` | SQLite file (relative to `server/`), auto-created on boot |
 | `JWT_SECRET` | server | — (required) | JWT signing secret, min 16 chars |
 | `JWT_EXPIRES_IN` | server | `7d` | Token lifetime |

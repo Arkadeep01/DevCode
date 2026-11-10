@@ -40,7 +40,16 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+/**
+ * Base URL of the API.
+ *
+ * `VITE_API_BASE_URL` is the documented name (see the root `.env.example`).
+ * `VITE_API_URL` is still accepted so older `.env` files keep working.
+ * When neither is set the SPA calls the relative `/api` path, which the Vite
+ * dev server proxies to the API (see `vite.config.ts`).
+ */
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? '/api';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
