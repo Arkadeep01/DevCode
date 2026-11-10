@@ -25,12 +25,8 @@ describe('Coach evaluation harness', () => {
 
     // Log results for visibility.
     for (const result of results) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `[coach-eval] ${result.passed ? 'PASS' : 'FAIL'} — ${result.name}`,
-      );
+      console.log(`[coach-eval] ${result.passed ? 'PASS' : 'FAIL'} — ${result.name}`);
       if (!result.passed) {
-        // eslint-disable-next-line no-console
         console.log(`      errors: ${result.errors.join('; ')}`);
       }
     }

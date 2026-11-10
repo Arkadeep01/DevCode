@@ -73,7 +73,6 @@ function loadQuestionsFromBank(bankName: string): FrontendQuestion[] {
 
   const sandbox: Record<string, unknown> = {};
   try {
-    // eslint-disable-next-line no-eval
     eval(jsContent + '; sandbox.QUESTIONS = QUESTIONS;');
   } catch (error) {
     console.warn(`[seed] Failed to parse ${bankName}.ts:`, error);

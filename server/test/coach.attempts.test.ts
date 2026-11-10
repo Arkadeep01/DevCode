@@ -2,7 +2,6 @@ import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
 import { sqlite } from '../src/db/client.js';
-import { questions } from '../src/db/schema.js';
 
 const app = createApp();
 
@@ -125,7 +124,17 @@ describe('POST /api/attempts', () => {
     expect(response.body.skipped).toBe(0);
     expect(response.body.attemptId).toBe('attempt-1');
 
-    const row = sqlite.prepare('SELECT * FROM attempts WHERE user_id = (SELECT id FROM users)').get() as any;
+    const row = sqlite
+      .prepare('SELECT * FROM attempts WHERE user_id = (SELECT id FROM users)')
+      .get() as {
+      user_id: number;
+      quiz_id: string;
+      question_id: number;
+      chosen_answer: number;
+      correct_answer: number;
+      is_correct: number;
+      is_skipped: number;
+    };
     expect(row.user_id).toBeTruthy();
     expect(row.quiz_id).toBe('attempt-1');
     expect(row.question_id).toBe(question.id);
@@ -152,7 +161,9 @@ describe('POST /api/attempts', () => {
     expect(response.body.created).toBe(0);
     expect(response.body.skipped).toBe(1);
 
-    const row = sqlite.prepare('SELECT * FROM attempts WHERE user_id = (SELECT id FROM users) AND is_skipped = 1').get() as any;
+    const row = sqlite
+      .prepare('SELECT * FROM attempts WHERE user_id = (SELECT id FROM users) AND is_skipped = 1')
+      .get() as { is_skipped: number; is_correct: number };
     expect(row.is_skipped).toBe(1);
     expect(row.is_correct).toBe(0);
   });
@@ -174,5 +185,89 @@ describe('POST /api/attempts', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe('Invalid attempt data');
+  });
+
+  it('persists the canonical focus area of the question', async () => {
+    const token = await registerCoachUser();
+    sqlite
+      .prepare(
+        `INSERT INTO questions (slug, category, difficulty, prompt, options, correct_index, explanation, focus_area)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        'dsa-focus',
+        'dsa',
+        'Intermediate',
+        'Which traversal is in-order?',
+        JSON.stringify(['In-Order', 'Pre-Order', 'Post-Order', 'Level-Order']),
+        0,
+        'Mock explanation',
+        'Focus Area: Binary Search Tree In-Order Traversal',
+      );
+
+    const response = await request(app)
+      .post('/api/attempts')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        attemptId: 'attempt-focus',
+        questions: [{ questionId: 'dsa-focus', selectedIndex: 1 }],
+      });
+
+    expect(response.status).toBe(201);
+
+    const row = sqlite
+      .prepare('SELECT focus_area, track, is_correct FROM attempts LIMIT 1')
+      .get() as { focus_area: string; track: string; is_correct: number };
+    expect(row.focus_area).toBe('Focus Area: Binary Search Tree In-Order Traversal');
+    expect(row.track).toBe('dsa');
+    expect(row.is_correct).toBe(0);
+  });
+
+  it('persists nothing when one question in the batch is unknown', async () => {
+    const token = await registerCoachUser();
+    const question = seedCoachQuestion('dsa-valid');
+
+    const response = await request(app)
+      .post('/api/attempts')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        attemptId: 'attempt-partial',
+        questions: [
+          { questionId: question.slug, selectedIndex: 0 },
+          { questionId: 'dsa-unknown', selectedIndex: 0 },
+        ],
+      });
+
+    expect(response.status).toBe(404);
+
+    const count = sqlite.prepare('SELECT COUNT(*) AS total FROM attempts').get() as { total: number };
+    expect(count.total).toBe(0);
+  });
+
+  it('keeps attempts separate per user', async () => {
+    const firstToken = await registerCoachUser();
+    const secondToken = await registerCoachUser();
+    const question = seedCoachQuestion('dsa-shared');
+
+    await request(app)
+      .post('/api/attempts')
+      .set('Authorization', `Bearer ${firstToken}`)
+      .send({
+        attemptId: 'attempt-shared',
+        questions: [{ questionId: question.slug, selectedIndex: 0 }],
+      });
+
+    const response = await request(app)
+      .post('/api/attempts')
+      .set('Authorization', `Bearer ${secondToken}`)
+      .send({
+        attemptId: 'attempt-shared',
+        questions: [{ questionId: question.slug, selectedIndex: 0 }],
+      });
+
+    // The same quiz id from another user is a different attempt.
+    expect(response.status).toBe(201);
+    const count = sqlite.prepare('SELECT COUNT(*) AS total FROM attempts').get() as { total: number };
+    expect(count.total).toBe(2);
   });
 });

@@ -1,9 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, renderHook } from '@testing-library/react';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import type { Question } from '../../types/question';
 import { usePracticeSession } from './usePracticeSession';
 
-afterEach(cleanup);
+const persistQuizAttempt = vi.fn();
+
+vi.mock('../../services/api', async () => {
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
+  return {
+    ...actual,
+    persistQuizAttempt: (...args: unknown[]) => persistQuizAttempt(...args),
+  };
+});
+
+afterEach(() => {
+  cleanup();
+  persistQuizAttempt.mockReset();
+  persistQuizAttempt.mockResolvedValue(undefined);
+});
 
 function makeAiQuestion(overrides: Partial<Question> = {}): Question {
   return {
@@ -67,5 +81,49 @@ describe('usePracticeSession — AI generated questions', () => {
       'coach-q-1',
       'coach-q-2',
     ]);
+  });
+});
+
+describe('usePracticeSession — attempt persistence', () => {
+  it('persists the finished attempt on the server', async () => {
+    const { result } = renderHook(() => usePracticeSession());
+
+    act(() => {
+      result.current.startWithQuestions([makeAiQuestion({ id: 'coach-q-1' })]);
+    });
+
+    act(() => {
+      result.current.answer(1);
+    });
+
+    act(() => {
+      result.current.submitNow();
+    });
+
+    await waitFor(() => expect(persistQuizAttempt).toHaveBeenCalledTimes(1));
+
+    const payload = persistQuizAttempt.mock.calls[0]?.[0] as {
+      attemptId: string;
+      questions: Array<{ questionId: string; selectedIndex: number | null }>;
+    };
+    expect(payload.attemptId).toContain('attempt-');
+    expect(payload.questions).toEqual([{ questionId: 'coach-q-1', selectedIndex: 1 }]);
+  });
+
+  it('still shows the results when the server call fails', async () => {
+    persistQuizAttempt.mockRejectedValue(new Error('offline'));
+
+    const { result } = renderHook(() => usePracticeSession());
+
+    act(() => {
+      result.current.startWithQuestions([makeAiQuestion({ id: 'coach-q-1' })]);
+    });
+
+    act(() => {
+      result.current.submitNow();
+    });
+
+    await waitFor(() => expect(result.current.phase).toBe('results'));
+    expect(result.current.result).not.toBeNull();
   });
 });

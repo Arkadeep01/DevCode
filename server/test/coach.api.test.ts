@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
 import { db, sqlite } from '../src/db/client.js';
 import { questions } from '../src/db/schema.js';
+import { STUDY_TOPIC_IDS } from '../src/coach/topicMap.js';
 
 const app = createApp();
 
@@ -27,6 +28,7 @@ function seedCoachQuestion(slug: string) {
     options: ['In-Order', 'Pre-Order', 'Post-Order', 'Level-Order'],
     correctIndex: 0,
     explanation: 'In-Order traversal visits nodes in ascending order.',
+    focusArea: 'Focus Area: Binary Search Tree In-Order Traversal',
   }).returning().get();
 }
 
@@ -119,5 +121,100 @@ describe('POST /api/coach', () => {
     }
 
     expect(lastStatus).toBe(429);
+  });
+
+  it('explains a miss using the canonical explanation from the question store', async () => {
+    const token = await registerCoachUser();
+    const question = seedCoachQuestion('coach-question-4');
+
+    const response = await request(app)
+      .post('/api/coach')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        attemptId: 'attempt-explain',
+        questions: [{ questionId: question.slug, selectedAnswer: 2 }],
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.explanations).toHaveLength(1);
+    expect(response.body.explanations[0].questionId).toBe('coach-question-4');
+    expect(response.body.explanations[0].explanation).toBe(
+      'In-Order traversal visits nodes in ascending order.',
+    );
+  });
+
+  it('produces a study plan that only points at real study topics', async () => {
+    const token = await registerCoachUser();
+    const question = seedCoachQuestion('coach-question-5');
+
+    const response = await request(app)
+      .post('/api/coach')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        attemptId: 'attempt-plan',
+        questions: [{ questionId: question.slug, selectedAnswer: 1 }],
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.studyPlan.length).toBeGreaterThan(0);
+    for (const item of response.body.studyPlan) {
+      expect(STUDY_TOPIC_IDS).toContain(item.topicId);
+    }
+  });
+
+  it('marks the generated practice questions as AI generated', async () => {
+    const token = await registerCoachUser();
+    const question = seedCoachQuestion('coach-question-6');
+
+    const response = await request(app)
+      .post('/api/coach')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        attemptId: 'attempt-practice',
+        questions: [{ questionId: question.slug, selectedAnswer: 1 }],
+      });
+
+    expect(response.status).toBe(200);
+    for (const practiceQuestion of response.body.practiceQuestions) {
+      expect(practiceQuestion.aiGenerated).toBe(true);
+    }
+  });
+
+  it('only computes analytics from the requesting user’s own attempts', async () => {
+    const owner = await registerCoachUser();
+    const other = await registerCoachUser();
+    const question = seedCoachQuestion('coach-question-7');
+
+    // The first user records a wrong attempt.
+    const attemptResponse = await request(app)
+      .post('/api/attempts')
+      .set('Authorization', `Bearer ${owner}`)
+      .send({
+        attemptId: 'attempt-owner',
+        questions: [{ questionId: question.slug, selectedIndex: 1 }],
+      });
+    expect(attemptResponse.status).toBe(201);
+
+    const ownerResponse = await request(app)
+      .post('/api/coach')
+      .set('Authorization', `Bearer ${owner}`)
+      .send({
+        attemptId: 'attempt-owner',
+        questions: [{ questionId: question.slug, selectedAnswer: 1 }],
+      });
+
+    const otherResponse = await request(app)
+      .post('/api/coach')
+      .set('Authorization', `Bearer ${other}`)
+      .send({
+        attemptId: 'attempt-other',
+        questions: [{ questionId: question.slug, selectedAnswer: 1 }],
+      });
+
+    expect(ownerResponse.status).toBe(200);
+    expect(otherResponse.status).toBe(200);
+    // The second user has no history, so the coach cannot quote accuracy for
+    // them; the response must not contain the first user's statistics.
+    expect(JSON.stringify(otherResponse.body)).not.toContain('attempt-owner');
   });
 });
