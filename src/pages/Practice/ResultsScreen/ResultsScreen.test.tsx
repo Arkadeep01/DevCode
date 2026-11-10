@@ -24,6 +24,7 @@ function renderResults(result: PracticeResult, timedOut: boolean) {
     <ResultsScreen
       result={result}
       timedOut={timedOut}
+      attemptId="attempt-test"
       onRetakeSame={vi.fn()}
       onNewQuiz={vi.fn()}
       onRetryMissed={vi.fn()}

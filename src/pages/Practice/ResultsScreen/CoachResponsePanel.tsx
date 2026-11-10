@@ -1,25 +1,55 @@
+import { useEffect, useRef } from 'react';
 import { Button } from '../../../components/Button/Button';
 import { Tag } from '../../../components/Tag/Tag';
 import { CodeBlock } from '../../../components/CodeBlock/CodeBlock';
+import { COACH_PANEL_ANCHOR } from '../../../routes';
 import type { CoachResponse } from '../../../services/api';
 import { toBankQuestions } from '../../../utils/coachQuestion';
 import './CoachResponsePanel.css';
 
 interface CoachResponsePanelProps {
   response: CoachResponse;
+  /** Ids of the sections the user had expanded; restored after a navigation. */
+  expandedSections?: string[] | undefined;
+  /** Reports that a section was expanded or collapsed. */
+  onToggleExpanded?: ((sectionId: string, isOpen: boolean) => void) | undefined;
   /** Starts a practice session built from the AI-generated questions. */
   onPracticeQuestions?: (() => void) | undefined;
+  /** Called before the user leaves for the Study hub. */
+  onOpenStudyTopic?: (() => void) | undefined;
   onDismiss: () => void;
 }
 
 export function CoachResponsePanel({
   response,
+  expandedSections,
+  onToggleExpanded,
   onPracticeQuestions,
+  onOpenStudyTopic,
   onDismiss,
 }: CoachResponsePanelProps) {
   // Generated questions are validated against the Question contract before
   // they are allowed anywhere near the quiz engine.
   const practiceQuestions = toBankQuestions(response.practiceQuestions);
+
+  // The <details> elements stay uncontrolled so the browser owns the open
+  // state; the expanded ids are only used to restore it after a navigation.
+  const detailsRefs = useRef(new Map<string, HTMLDetailsElement>());
+
+  useEffect(() => {
+    const wanted = expandedSections ?? [];
+    for (const [sectionId, element] of detailsRefs.current) {
+      if (!element) continue;
+      const shouldBeOpen = wanted.includes(sectionId);
+      if (shouldBeOpen && !element.open) element.open = true;
+      if (!shouldBeOpen && element.open) element.open = false;
+    }
+  }, [expandedSections]);
+
+  const registerDetails = (sectionId: string) => (element: HTMLDetailsElement | null) => {
+    if (element) detailsRefs.current.set(sectionId, element);
+    else detailsRefs.current.delete(sectionId);
+  };
 
   const hasContent =
     response.explanations.length > 0 ||
@@ -27,7 +57,11 @@ export function CoachResponsePanel({
     practiceQuestions.length > 0;
 
   return (
-    <section className="coach-panel" aria-labelledby="coach-panel-title">
+    <section
+      className="coach-panel"
+      id={COACH_PANEL_ANCHOR}
+      aria-labelledby="coach-panel-title"
+    >
       <header className="coach-panel__header">
         <h2 className="coach-panel__title" id="coach-panel-title" tabIndex={-1}>
           AI Coach
@@ -46,7 +80,13 @@ export function CoachResponsePanel({
           <ul className="coach-panel__explanations">
             {response.explanations.map((explanation) => (
               <li key={explanation.questionId} className="coach-panel__explanation">
-                <details className="coach-panel__exp-detail">
+                <details
+                  className="coach-panel__exp-detail"
+                  ref={registerDetails(explanation.questionId)}
+                  onToggle={(event) =>
+                    onToggleExpanded?.(explanation.questionId, event.currentTarget.open)
+                  }
+                >
                   <summary className="coach-panel__exp-summary">
                     <span className="coach-panel__exp-question-id">
                       {explanation.questionId}
@@ -89,7 +129,8 @@ export function CoachResponsePanel({
                   <Button
                     variant="outline"
                     size="sm"
-                    to={`/study?topic=${encodeURIComponent(item.topicId)}`}
+                    to={`/study?topic=${encodeURIComponent(item.topicId)}&from=results`}
+                    onClick={onOpenStudyTopic}
                   >
                     Open in Study hub
                   </Button>
@@ -108,7 +149,13 @@ export function CoachResponsePanel({
           <ul className="coach-panel__practice-questions">
             {practiceQuestions.map((question, index) => (
               <li key={question.id} className="coach-panel__practice-item">
-                <details className="coach-panel__practice-detail">
+                <details
+                  className="coach-panel__practice-detail"
+                  ref={registerDetails(question.id)}
+                  onToggle={(event) =>
+                    onToggleExpanded?.(question.id, event.currentTarget.open)
+                  }
+                >
                   <summary className="coach-panel__practice-summary">
                     <span className="coach-panel__practice-number">
                       Practice {index + 1}

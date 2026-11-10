@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
 import { Eyebrow } from '../../components/Eyebrow/Eyebrow';
 import { useToast } from '../../components/Toast/ToastContext';
 import { STUDY_TOPICS } from '../../data/studyTopics';
+import { ROUTES, COACH_PANEL_ANCHOR } from '../../routes';
 import type { StudyTopic } from '../../types/topic';
 import { useDocumentTitle } from '../../utils/useDocumentTitle';
 import { StudyToolbar } from './StudyToolbar/StudyToolbar';
@@ -21,11 +22,15 @@ export function StudyPage() {
   const { mastered, bookmarks, toggleMastered, toggleBookmark } = useTopicProgress();
   const [selected, setSelected] = useState<StudyTopic | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const toast = useToast();
 
   // Deep link support: /study?topic=<topicId> opens that topic directly, so
   // the AI coach study plan can link straight into the right topic.
   const requestedTopicId = searchParams.get('topic');
+  // `from=results` marks that the user arrived from the AI coach on the
+  // Results screen, so closing the topic takes them back to it.
+  const returnToResults = searchParams.get('from') === 'results';
 
   useEffect(() => {
     if (!requestedTopicId) return;
@@ -47,6 +52,17 @@ export function StudyPage() {
 
   const closeDetail = useCallback(() => {
     setSelected(null);
+
+    // Coming from the AI coach: go back to the Results screen and let the
+    // ScrollManager bring the coach panel back into view.
+    if (returnToResults) {
+      navigate(ROUTES.practice, {
+        replace: true,
+        state: { scrollTo: COACH_PANEL_ANCHOR },
+      });
+      return;
+    }
+
     if (requestedTopicId) {
       setSearchParams(
         (current) => {
@@ -57,7 +73,7 @@ export function StudyPage() {
         { replace: true },
       );
     }
-  }, [requestedTopicId, setSearchParams]);
+  }, [navigate, requestedTopicId, returnToResults, setSearchParams]);
 
   const handleToggleMastered = (topic: StudyTopic) => {
     const { added } = toggleMastered(topic.id);

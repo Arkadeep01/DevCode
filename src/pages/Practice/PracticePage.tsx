@@ -21,6 +21,7 @@ export function PracticePage() {
     phase,
     result,
     timedOut,
+    attemptId,
     questions,
     answers,
     flags,
@@ -120,6 +121,7 @@ export function PracticePage() {
       <ResultsScreen
         result={result}
         timedOut={timedOut}
+        attemptId={attemptId ?? 'unknown-attempt'}
         onRetakeSame={retakeSame}
         onNewQuiz={newQuiz}
         onRetryMissed={retryMissed}

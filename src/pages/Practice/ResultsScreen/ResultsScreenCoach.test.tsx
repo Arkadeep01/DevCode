@@ -55,6 +55,7 @@ function renderResults(result: PracticeResult) {
       <ResultsScreen
         result={result}
         timedOut={false}
+        attemptId="attempt-test"
         onRetakeSame={vi.fn()}
         onNewQuiz={vi.fn()}
         onRetryMissed={vi.fn()}
@@ -94,6 +95,9 @@ const coachPayload = {
 
 beforeEach(() => {
   getCoachResponse.mockReset();
+  // The coaching session is persisted per attempt, so each test starts from
+  // a clean tab.
+  window.sessionStorage.clear();
 });
 
 describe('ResultsScreen AI coach', () => {

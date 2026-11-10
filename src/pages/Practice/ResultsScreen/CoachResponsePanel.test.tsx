@@ -87,7 +87,7 @@ describe('CoachResponsePanel', () => {
     renderPanel(makeResponse());
 
     const link = screen.getByRole('link', { name: 'Open in Study hub' });
-    expect(link.getAttribute('href')).toBe('/study?topic=dsa-sliding-window');
+    expect(link.getAttribute('href')).toBe('/study?topic=dsa-sliding-window&from=results');
   });
 
   it('renders the generated practice questions with an AI badge', () => {

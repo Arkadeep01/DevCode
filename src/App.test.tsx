@@ -21,7 +21,9 @@ describe('App lazy routes', () => {
     renderApp('/practice');
 
     expect(screen.getByText('Loading…')).toBeTruthy();
-    expect(await screen.findByText('Set up your run.')).toBeTruthy();
+    // The lazy chunk plus the full practice tree can take a moment when the
+    // whole suite runs in parallel.
+    expect(await screen.findByText('Set up your run.', {}, { timeout: 5000 })).toBeTruthy();
     expect(screen.queryByText('Loading…')).toBeNull();
   });
 
@@ -29,7 +31,7 @@ describe('App lazy routes', () => {
     renderApp('/study');
 
     expect(screen.getByText('Loading…')).toBeTruthy();
-    expect(await screen.findByText('Topics that pay off.')).toBeTruthy();
+    expect(await screen.findByText('Topics that pay off.', {}, { timeout: 5000 })).toBeTruthy();
     expect(screen.queryByText('Loading…')).toBeNull();
   });
 

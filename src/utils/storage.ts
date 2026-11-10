@@ -12,6 +12,12 @@ export const STORAGE_KEYS = {
 /** Tab-scoped keys (sessionStorage) — cleared when the tab closes. */
 export const SESSION_KEYS = {
   practiceDraft: 'devcode_practice_draft',
+  /** The finished attempt whose Results screen can be restored. */
+  practiceResults: 'devcode_practice_results',
+  /** The AI Coach answer for that attempt. */
+  practiceCoach: 'devcode_practice_coach',
+  /** Marks that the user left the Results screen for the Study hub. */
+  practiceReturn: 'devcode_practice_return',
 } as const;
 
 export function readJson<T>(key: string, fallback: T): T {
@@ -44,8 +50,7 @@ export function readSessionJson<T>(key: string, fallback: T): T {
   }
 }
 
-export function writeSessionJson(key: string, value: unknown): void {
-  try {
+export function writeSessionJson(key: string, value: unknown): void {  try {
     window.sessionStorage.setItem(key, JSON.stringify(value));
   } catch {
     /* storage unavailable — ignore */

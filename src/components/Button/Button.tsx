@@ -12,7 +12,7 @@ export interface ButtonProps {
   size?: ButtonSize;
   /** Internal route — renders a react-router Link. */
   to?: string;
-  onClick?: () => void;
+  onClick?: (() => void) | undefined;
   type?: 'button' | 'submit';
   disabled?: boolean;
   className?: string;

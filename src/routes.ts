@@ -17,3 +17,9 @@ export const SECTION_IDS = {
 } as const;
 
 export type SectionId = (typeof SECTION_IDS)[keyof typeof SECTION_IDS];
+
+/**
+ * DOM id of the AI Coach panel. The Study hub scrolls back to it when the
+ * user returns from a recommended topic.
+ */
+export const COACH_PANEL_ANCHOR = 'coach-panel';

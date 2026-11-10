@@ -12,6 +12,12 @@ import { persistQuizAttempt } from '../../services/api';
 import type { Question, SessionQuestion } from '../../types/question';
 import type { PracticeConfig, PracticePhase, PracticeResult } from './practiceTypes';
 import { computeResult } from './computeResult';
+import {
+  clearResultsSnapshot,
+  consumeResultsReturn,
+  readResultsSnapshot,
+  writeResultsSnapshot,
+} from './resultsSnapshot';
 
 const SECONDS_PER_QUESTION = 90;
 
@@ -72,7 +78,17 @@ export function buildSession(config: PracticeConfig): SessionQuestion[] {
 }
 
 export function usePracticeSession() {
-  const [phase, setPhase] = useState<PracticePhase>('setup');
+  // Restore the Results screen when the user comes back from the Study hub.
+  // The marker is only consumed when it belongs to the stored attempt, so a
+  // plain visit to /practice never resurrects an old result.
+  const [restored] = useState(() => {
+    const snapshot = readResultsSnapshot();
+    if (!snapshot) return null;
+    if (!consumeResultsReturn(snapshot.attemptId)) return null;
+    return snapshot;
+  });
+
+  const [phase, setPhase] = useState<PracticePhase>(restored ? 'results' : 'setup');
   const [config, setConfig] = useState<PracticeConfig | null>(null);
   const [questions, setQuestions] = useState<SessionQuestion[]>([]);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
@@ -80,8 +96,9 @@ export function usePracticeSession() {
   const [current, setCurrent] = useState(0);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const [result, setResult] = useState<PracticeResult | null>(null);
-  const [timedOut, setTimedOut] = useState(false);
+  const [result, setResult] = useState<PracticeResult | null>(restored?.result ?? null);
+  const [timedOut, setTimedOut] = useState(restored?.timedOut ?? false);
+  const [attemptId, setAttemptId] = useState<string | null>(restored?.attemptId ?? null);
   const [recoverable, setRecoverable] = useState<PracticeDraft | null>(() => readDraft());
   const startedAtRef = useRef(0);
   const deadlineRef = useRef<number | null>(null);
@@ -144,11 +161,19 @@ export function usePracticeSession() {
     setTimeLeft(nextConfig.untimed ? null : session.length * SECONDS_PER_QUESTION);
     setResult(null);
     setTimedOut(false);
+    // A new run invalidates the previous Results screen and its coaching.
+    setAttemptId(null);
+    clearResultsSnapshot();
     setPhase('quiz');
   }, []);
 
   const finish = useCallback(
-    async (sessionQuestions: SessionQuestion[], sessionAnswers: (number | null)[], sessionFlags: boolean[]) => {
+    async (
+      sessionQuestions: SessionQuestion[],
+      sessionAnswers: (number | null)[],
+      sessionFlags: boolean[],
+      wasTimedOut = false,
+    ) => {
       if (!config || submittedRef.current) return;
       submittedRef.current = true;
       const { result: nextResult, attempt } = computeResult(
@@ -158,19 +183,28 @@ export function usePracticeSession() {
         startedAtRef.current,
         config,
       );
+      const nextAttemptId = `attempt-${startedAtRef.current}`;
       setResult(nextResult);
+      setAttemptId(nextAttemptId);
+      setTimedOut(wasTimedOut);
       setPhase('results');
       saveQuizAttempt(attempt);
       clearDraft();
+      // Mirror the finished attempt so the Results screen can be restored
+      // after the user visits the Study hub.
+      writeResultsSnapshot({
+        attemptId: nextAttemptId,
+        result: nextResult,
+        timedOut: wasTimedOut,
+      });
 
       // Persist attempt to server (fire and forget)
       try {
-        const attemptId = `attempt-${startedAtRef.current}`;
         const questionsPayload = sessionQuestions.map((q, index) => ({
           questionId: q.id,
           selectedIndex: sessionAnswers[index] ?? null,
         }));
-        await persistQuizAttempt({ attemptId, questions: questionsPayload });
+        await persistQuizAttempt({ attemptId: nextAttemptId, questions: questionsPayload });
       } catch (error) {
         // Log but don't block the UI - localStorage already has the attempt
         console.warn('Failed to persist attempt to server:', error);
@@ -182,7 +216,7 @@ export function usePracticeSession() {
   useEffect(() => {
     if (phase === 'quiz' && timeLeft === 0 && !submittedRef.current) {
       setTimedOut(true);
-      finish(questions, answers, flags);
+      finish(questions, answers, flags, true);
     }
   }, [phase, timeLeft, questions, answers, flags, finish]);
 
@@ -270,6 +304,9 @@ export function usePracticeSession() {
     submittedRef.current = false;
     setResult(null);
     setTimedOut(false);
+    setAttemptId(null);
+    // Starting over discards the stored Results screen and its coaching.
+    clearResultsSnapshot();
     setPhase('setup');
   }, []);
 
@@ -305,6 +342,7 @@ export function usePracticeSession() {
     config,
     result,
     timedOut,
+    attemptId,
     questions,
     answers,
     flags,

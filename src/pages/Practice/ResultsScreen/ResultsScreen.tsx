@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../../../components/Button/Button';
 import { Eyebrow } from '../../../components/Eyebrow/Eyebrow';
 import { ApiError, getCoachResponse, type CoachResponse } from '../../../services/api';
@@ -8,11 +8,19 @@ import type { PracticeResult } from '../practiceTypes';
 import { formatDuration } from '../formatDuration';
 import { ResultsReview } from './ResultsReview';
 import { CoachResponsePanel } from './CoachResponsePanel';
+import {
+  clearCoachSnapshot,
+  markResultsReturn,
+  readCoachSnapshot,
+  writeCoachSnapshot,
+} from '../resultsSnapshot';
 import './ResultsScreen.css';
 
 interface ResultsScreenProps {
   result: PracticeResult;
   timedOut: boolean;
+  /** Stable id of the attempt this screen shows; keys the coaching session. */
+  attemptId: string;
   onRetakeSame: () => void;
   onNewQuiz: () => void;
   onRetryMissed: () => void;
@@ -25,6 +33,7 @@ type CoachStatus = 'idle' | 'loading' | 'ready' | 'error';
 export function ResultsScreen({
   result,
   timedOut,
+  attemptId,
   onRetakeSame,
   onNewQuiz,
   onRetryMissed,
@@ -32,10 +41,30 @@ export function ResultsScreen({
 }: ResultsScreenProps) {
   const missedCount = result.review.filter((item) => !item.correct).length;
 
-  const [coachStatus, setCoachStatus] = useState<CoachStatus>('idle');
-  const [coachResponse, setCoachResponse] = useState<CoachResponse | null>(null);
-  const [coachError, setCoachError] = useState<string | null>(null);
+  // Restore the coaching session of this attempt when the user comes back
+  // from the Study hub. Nothing is regenerated: the stored answer is reused.
+  const restored = readCoachSnapshot(attemptId);
+
+  const [coachStatus, setCoachStatus] = useState<CoachStatus>(restored?.status ?? 'idle');
+  const [coachResponse, setCoachResponse] = useState<CoachResponse | null>(
+    restored?.response ?? null,
+  );
+  const [coachError, setCoachError] = useState<string | null>(restored?.error ?? null);
+  const [expandedSections, setExpandedSections] = useState<string[]>(
+    restored?.expanded ?? [],
+  );
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Mirror the coaching session so it survives the trip to the Study hub.
+  useEffect(() => {
+    writeCoachSnapshot({
+      attemptId,
+      status: coachStatus,
+      response: coachResponse,
+      error: coachError,
+      expanded: expandedSections,
+    });
+  }, [attemptId, coachStatus, coachResponse, coachError, expandedSections]);
 
   const requestCoach = useCallback(async () => {
     setCoachStatus('loading');
@@ -43,7 +72,7 @@ export function ResultsScreen({
 
     try {
       const response = await getCoachResponse({
-        attemptId: `attempt-${result.review.length}-${result.score}-${result.total}`,
+        attemptId,
         questions: result.review.map((item) => ({
           questionId: item.question.id,
           selectedAnswer: item.selected,
@@ -63,12 +92,14 @@ export function ResultsScreen({
       setCoachError(message);
       setCoachStatus('error');
     }
-  }, [result]);
+  }, [attemptId, result]);
 
   const dismissCoach = useCallback(() => {
     setCoachStatus('idle');
     setCoachResponse(null);
     setCoachError(null);
+    setExpandedSections([]);
+    clearCoachSnapshot();
   }, []);
 
   const startAiPractice = useCallback(() => {
@@ -77,6 +108,24 @@ export function ResultsScreen({
     if (questions.length === 0) return;
     onPracticeAiQuestions(questions);
   }, [coachResponse, onPracticeAiQuestions]);
+
+  /**
+   * Records that the user is leaving for the Study hub, so the Results screen
+   * and its coaching session are restored when they come back.
+   */
+  const openStudyTopic = useCallback(() => {
+    markResultsReturn(attemptId);
+  }, [attemptId]);
+
+  const toggleExpanded = useCallback((sectionId: string, isOpen: boolean) => {
+    setExpandedSections((current) =>
+      isOpen
+        ? current.includes(sectionId)
+          ? current
+          : [...current, sectionId]
+        : current.filter((id) => id !== sectionId),
+    );
+  }, []);
 
   const coachBusy = coachStatus === 'loading';
 
@@ -144,9 +193,12 @@ export function ResultsScreen({
         <div ref={panelRef} tabIndex={-1}>
           <CoachResponsePanel
             response={coachResponse}
+            expandedSections={expandedSections}
+            onToggleExpanded={toggleExpanded}
             onPracticeQuestions={
               onPracticeAiQuestions ? startAiPractice : undefined
             }
+            onOpenStudyTopic={openStudyTopic}
             onDismiss={dismissCoach}
           />
         </div>
