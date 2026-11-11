@@ -5,7 +5,23 @@ import { requireAuth } from '../auth/middleware.js';
 import { hashPassword, verifyPassword } from '../auth/password.js';
 import { signToken } from '../auth/tokens.js';
 import { db } from '../db/client.js';
+import { isUniqueViolation } from '../db/errors.js';
 import { users, type User } from '../db/schema.js';
+import { env } from '../config/env.js';
+import { createRateLimiter } from '../middleware/rateLimit.js';
+
+/**
+ * Credential throttling for the two endpoints that can be brute-forced.
+ * It is keyed by client IP because no user id exists before authentication,
+ * and because credential stuffing is an IP-shaped problem.
+ *
+ * `GET /api/auth/me` is deliberately *not* throttled: it runs on every page
+ * load and shares the same IP as every other user behind a NAT.
+ */
+const credentialRateLimiter = createRateLimiter({
+  windowMs: env.AUTH_RATE_LIMIT_WINDOW_MS,
+  max: env.AUTH_RATE_LIMIT_MAX,
+});
 
 const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
@@ -27,18 +43,9 @@ function toPublicUser(user: User) {
   };
 }
 
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE'
-  );
-}
-
 export const authRouter = Router();
 
-authRouter.post('/register', async (req, res, next) => {
+authRouter.post('/register', credentialRateLimiter, async (req, res, next) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -54,7 +61,7 @@ authRouter.post('/register', async (req, res, next) => {
 
     const { email, password, displayName } = parsed.data;
     const passwordHash = await hashPassword(password);
-    const user = db.insert(users).values({ email, passwordHash, displayName }).returning().get();
+    const [user] = await db.insert(users).values({ email, passwordHash, displayName }).returning();
 
     res.status(201).json({ token: signToken(user.id), user: toPublicUser(user) });
   } catch (error) {
@@ -66,7 +73,7 @@ authRouter.post('/register', async (req, res, next) => {
   }
 });
 
-authRouter.post('/login', async (req, res, next) => {
+authRouter.post('/login', credentialRateLimiter, async (req, res, next) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -75,7 +82,7 @@ authRouter.post('/login', async (req, res, next) => {
     }
 
     const { email, password } = parsed.data;
-    const user = db.select().from(users).where(eq(users.email, email)).get();
+    const user = await db.select().from(users).where(eq(users.email, email)).get();
 
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
       res.status(401).json({ error: 'Invalid email or password' });
@@ -88,8 +95,8 @@ authRouter.post('/login', async (req, res, next) => {
   }
 });
 
-authRouter.get('/me', requireAuth, (req, res) => {
-  const user = db
+authRouter.get('/me', requireAuth, async (req, res) => {
+  const user = await db
     .select()
     .from(users)
     .where(eq(users.id, req.userId ?? 0))

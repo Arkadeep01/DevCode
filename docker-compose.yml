@@ -1,0 +1,52 @@
+# Single-host deployment of DevCode (the Vercel path is documented in
+# DEPLOYMENT.md).
+#
+#   docker compose --env-file .env.compose up -d --build
+#
+# The image serves the API and the built SPA on one origin (port 4000 by
+# default), so no separate static host and no CORS configuration is needed.
+#
+# Secrets are never baked into the image: they are read from the environment
+# at start-up. `JWT_SECRET` is mandatory.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: devcode:latest
+    restart: unless-stopped
+    ports:
+      - "${PORT:-4000}:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      # A local file (persisted in the volume below) — swap in
+      # `libsql://your-db.turso.io` to use a remote database instead.
+      DATABASE_URL: ${DATABASE_URL:-./data/devcode.sqlite}
+      DATABASE_AUTH_TOKEN: ${DATABASE_AUTH_TOKEN:-}
+      # The container has a persistent volume, so a local database is allowed.
+      # A serverless deployment must point DATABASE_URL at a remote libSQL
+      # server instead and leave this at false.
+      ALLOW_LOCAL_DATABASE: ${ALLOW_LOCAL_DATABASE:-true}
+      STATIC_DIR: ../dist
+      # Mandatory — the server refuses to boot in production without it.
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in the environment or --env-file}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      # Only needed when the SPA is hosted on a different origin.
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      COACH_PROVIDER: ${COACH_PROVIDER:-mock}
+      COACH_MODEL: ${COACH_MODEL:-gpt-4o-mini}
+      COACH_API_KEY: ${COACH_API_KEY:-}
+      COACH_BASE_URL: ${COACH_BASE_URL:-https://api.openai.com/v1}
+      COACH_DAILY_TOKEN_BUDGET: ${COACH_DAILY_TOKEN_BUDGET:-50000}
+      COACH_RATE_LIMIT_MAX: ${COACH_RATE_LIMIT_MAX:-10}
+      AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-10}
+    volumes:
+      # The SQLite database and its WAL files must survive a redeploy.
+      - devcode-data:/app/server/data
+
+volumes:
+  devcode-data:

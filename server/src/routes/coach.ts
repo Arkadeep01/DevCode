@@ -37,9 +37,11 @@ async function resolveCoachQuestions(
   const resolved: CoachContextQuestion[] = [];
 
   for (const input of inputs) {
-    const row = /^\d+$/.test(input.questionId)
-      ? db.select().from(questions).where(eq(questions.id, Number(input.questionId))).get()
-      : db.select().from(questions).where(eq(questions.slug, input.questionId)).get();
+    const row = await (
+      /^\d+$/.test(input.questionId)
+        ? db.select().from(questions).where(eq(questions.id, Number(input.questionId)))
+        : db.select().from(questions).where(eq(questions.slug, input.questionId))
+    ).get();
 
     if (!row) {
       throw new CoachError(`Question not found: ${input.questionId}`, 404);
@@ -63,18 +65,17 @@ async function resolveCoachQuestions(
  * Builds the deterministic analytics snapshot for the user. The AI never
  * computes accuracy itself - it receives the numbers computed here.
  */
-function buildUserAnalytics(userId: number) {
-  const historicalAttempts = db
+async function buildUserAnalytics(userId: number) {
+  const historicalAttempts = await db
     .select()
     .from(attempts)
     .where(eq(attempts.userId, userId))
     .orderBy(desc(attempts.createdAt))
-    .limit(500)
-    .all();
+    .limit(500);
 
   if (historicalAttempts.length === 0) return null;
 
-  const allQuestions = db.select().from(questions).all();
+  const allQuestions = await db.select().from(questions);
   return toContextCoachAnalytics(calculateCoachAnalytics(historicalAttempts, allQuestions));
 }
 
@@ -143,7 +144,7 @@ coachRouter.post('/', requireAuth, coachRateLimiter, async (req, res, next) => {
         userId,
         attemptId,
         questions: resolvedQuestions,
-        analytics: buildUserAnalytics(userId) ?? undefined,
+        analytics: (await buildUserAnalytics(userId)) ?? undefined,
       });
 
       const response = await provider.generate(context);

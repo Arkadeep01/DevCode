@@ -10,17 +10,17 @@ import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-process.env.DATABASE_URL = join(tmpdir(), `devcode-smoke-${randomUUID()}.sqlite`);
+process.env.DATABASE_URL = `file:${join(tmpdir(), `devcode-smoke-${randomUUID()}.sqlite`)}`;
 process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'smoke-only-secret-0123456789abcdef';
 process.env.NODE_ENV = 'test';
 
 const { createApp } = await import('../src/app.js');
-const { db, sqlite } = await import('../src/db/client.js');
-const { migrate } = await import('drizzle-orm/better-sqlite3/migrator');
-const { fileURLToPath } = await import('node:url');
+const { db, client } = await import('../src/db/client.js');
+const { migrate } = await import('drizzle-orm/libsql/migrator');
 const { questions } = await import('../src/db/schema.js');
+const { migrationsFolder } = await import('../src/config/paths.js');
 
-migrate(db, { migrationsFolder: fileURLToPath(new URL('../drizzle', import.meta.url)) });
+await migrate(db, { migrationsFolder });
 
 const app = createApp();
 const base = 'http://127.0.0.1';
@@ -58,18 +58,16 @@ const registration = await call('/api/auth/register', {
 check('user registers', registration.status === 201, registration.status);
 const token = (registration.body as { token: string }).token;
 
-db.insert(questions)
-  .values({
-    slug: 'smoke-dsa-1',
-    category: 'dsa',
-    difficulty: 'Intermediate',
-    prompt: 'Which traversal visits nodes in ascending order on a BST?',
-    options: ['In-Order', 'Pre-Order', 'Post-Order', 'Level-Order'],
-    correctIndex: 0,
-    explanation: 'In-Order traversal visits nodes in ascending order.',
-    focusArea: 'Focus Area: Binary Search Tree In-Order Traversal',
-  })
-  .run();
+await db.insert(questions).values({
+  slug: 'smoke-dsa-1',
+  category: 'dsa',
+  difficulty: 'Intermediate',
+  prompt: 'Which traversal visits nodes in ascending order on a BST?',
+  options: ['In-Order', 'Pre-Order', 'Post-Order', 'Level-Order'],
+  correctIndex: 0,
+  explanation: 'In-Order traversal visits nodes in ascending order.',
+  focusArea: 'Focus Area: Binary Search Tree In-Order Traversal',
+});
 
 const attempt = await call(
   '/api/attempts',
@@ -84,11 +82,19 @@ const attempt = await call(
 );
 check('attempt is persisted', attempt.status === 201, attempt.body);
 
-const row = sqlite
-  .prepare('SELECT is_correct, correct_answer, focus_area FROM attempts LIMIT 1')
-  .get() as { is_correct: number; correct_answer: number; focus_area: string };
-check('correctness is resolved server-side', row.is_correct === 0, row);
-check('canonical focus area is stored', row.focus_area.startsWith('Focus Area:'), row.focus_area);
+const attemptRow = (
+  await client.execute('SELECT is_correct, correct_answer, focus_area FROM attempts LIMIT 1')
+).rows[0] as { is_correct: number; correct_answer: number; focus_area: string };
+check(
+  'correctness is resolved server-side',
+  attemptRow.is_correct === 0,
+  attemptRow,
+);
+check(
+  'canonical focus area is stored',
+  attemptRow.focus_area.startsWith('Focus Area:'),
+  attemptRow.focus_area,
+);
 
 const coach = await call(
   '/api/coach',

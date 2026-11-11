@@ -1,9 +1,10 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
-import { db, sqlite } from '../src/db/client.js';
+import { db } from '../src/db/client.js';
 import { questions } from '../src/db/schema.js';
 import { STUDY_TOPIC_IDS } from '../src/coach/topicMap.js';
+import { execute } from './helpers/sql.js';
 
 const app = createApp();
 
@@ -19,24 +20,29 @@ async function registerCoachUser(): Promise<string> {
   return response.body.token;
 }
 
-function seedCoachQuestion(slug: string) {
-  return db.insert(questions).values({
-    slug,
-    category: 'dsa',
-    difficulty: 'Beginner',
-    prompt: 'Which traversal visits nodes in ascending order on a BST?',
-    options: ['In-Order', 'Pre-Order', 'Post-Order', 'Level-Order'],
-    correctIndex: 0,
-    explanation: 'In-Order traversal visits nodes in ascending order.',
-    focusArea: 'Focus Area: Binary Search Tree In-Order Traversal',
-  }).returning().get();
+async function seedCoachQuestion(slug: string) {
+  const [row] = await db
+    .insert(questions)
+    .values({
+      slug,
+      category: 'dsa',
+      difficulty: 'Beginner',
+      prompt: 'Which traversal visits nodes in ascending order on a BST?',
+      options: ['In-Order', 'Pre-Order', 'Post-Order', 'Level-Order'],
+      correctIndex: 0,
+      explanation: 'In-Order traversal visits nodes in ascending order.',
+      focusArea: 'Focus Area: Binary Search Tree In-Order Traversal',
+    })
+    .returning();
+
+  return row;
 }
 
-beforeEach(() => {
-  sqlite.prepare('DELETE FROM submissions').run();
-  sqlite.prepare('DELETE FROM progress').run();
-  sqlite.prepare('DELETE FROM questions').run();
-  sqlite.prepare('DELETE FROM users').run();
+beforeEach(async () => {
+  await execute('DELETE FROM submissions');
+  await execute('DELETE FROM progress');
+  await execute('DELETE FROM questions');
+  await execute('DELETE FROM users');
 });
 
 describe('POST /api/coach', () => {
@@ -73,7 +79,7 @@ describe('POST /api/coach', () => {
 
   it('returns a grounded coach response for a missed question', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('coach-question-1');
+    const question = await seedCoachQuestion('coach-question-1');
 
     const response = await request(app)
       .post('/api/coach')
@@ -92,7 +98,7 @@ describe('POST /api/coach', () => {
 
   it('returns an empty coaching response when every answer was correct', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('coach-question-2');
+    const question = await seedCoachQuestion('coach-question-2');
 
     const response = await request(app)
       .post('/api/coach')
@@ -109,7 +115,7 @@ describe('POST /api/coach', () => {
 
   it('returns 429 when the coach rate limit is exceeded', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('coach-question-3');
+    const question = await seedCoachQuestion('coach-question-3');
 
     let lastStatus = 0;
     for (let index = 0; index < 11; index += 1) {
@@ -125,7 +131,7 @@ describe('POST /api/coach', () => {
 
   it('explains a miss using the canonical explanation from the question store', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('coach-question-4');
+    const question = await seedCoachQuestion('coach-question-4');
 
     const response = await request(app)
       .post('/api/coach')
@@ -145,7 +151,7 @@ describe('POST /api/coach', () => {
 
   it('produces a study plan that only points at real study topics', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('coach-question-5');
+    const question = await seedCoachQuestion('coach-question-5');
 
     const response = await request(app)
       .post('/api/coach')
@@ -164,7 +170,7 @@ describe('POST /api/coach', () => {
 
   it('marks the generated practice questions as AI generated', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('coach-question-6');
+    const question = await seedCoachQuestion('coach-question-6');
 
     const response = await request(app)
       .post('/api/coach')
@@ -183,7 +189,7 @@ describe('POST /api/coach', () => {
   it('only computes analytics from the requesting user’s own attempts', async () => {
     const owner = await registerCoachUser();
     const other = await registerCoachUser();
-    const question = seedCoachQuestion('coach-question-7');
+    const question = await seedCoachQuestion('coach-question-7');
 
     // The first user records a wrong attempt.
     const attemptResponse = await request(app)

@@ -3,7 +3,7 @@ import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
 import { signToken } from '../src/auth/tokens.js';
-import { sqlite } from '../src/db/client.js';
+import { execute } from './helpers/sql.js';
 
 const app = createApp();
 
@@ -23,8 +23,8 @@ function login(email: string, password: string) {
   return request(app).post('/api/auth/login').send({ email, password });
 }
 
-beforeEach(() => {
-  sqlite.prepare('DELETE FROM users').run();
+beforeEach(async () => {
+  await execute('DELETE FROM users');
 });
 
 describe('POST /api/auth/register', () => {

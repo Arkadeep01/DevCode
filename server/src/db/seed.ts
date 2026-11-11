@@ -4,17 +4,21 @@
  *
  * The server owns the canonical copy of every question (slug, prompt, options,
  * correct index, explanation, focus area). The frontend bank stays the source
- * of truth; this script mirrors it into SQLite.
+ * of truth; this script mirrors it into the database.
  *
  * Run with: npm run db:seed
  */
-import { mkdirSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import Database from 'better-sqlite3';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { eq } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle } from 'drizzle-orm/libsql';
 import { questions } from './schema.js';
-import 'dotenv/config';
+import {
+  createDatabaseClient,
+  describeDatabaseTarget,
+  isRemoteDatabaseUrl,
+} from '../config/database.js';
+import { repoRoot } from '../config/paths.js';
 
 interface FrontendQuestion {
   id: string;
@@ -42,11 +46,43 @@ const BANKS = [
   'javascript',
 ] as const;
 
+/**
+ * Locates the repository root that holds `src/data/questionBank`.
+ *
+ * In a production image the frontend bank is copied next to the server
+ * package, so the layout is `<root>/src/data/questionBank`. The working
+ * directory is only used as a fallback for unusual invocations.
+ */
 function projectRoot(): string {
-  // The script runs from the `server` folder (npm scripts), but stay robust
-  // when it is invoked from the repository root.
-  const cwd = process.cwd();
-  return cwd.endsWith('server') ? resolve(cwd, '..') : cwd;
+  const candidates = [repoRoot, resolve(process.cwd(), '..'), process.cwd()];
+
+  for (const candidate of candidates) {
+    if (existsSync(resolve(candidate, 'src/data/questionBank'))) return candidate;
+  }
+
+  return repoRoot;
+}
+
+/**
+ * Refuses to seed a production database unless the operator opts in
+ * explicitly, so a stray script run cannot overwrite the canonical questions.
+ *
+ * The guard triggers on the *target*, not only on `NODE_ENV`: a remote
+ * libSQL/Turso database is a production database whatever the environment
+ * says, and `server/.env` may well still say `development`.
+ */
+function assertSeedAllowed(databaseUrl: string): void {
+  const nodeEnv = (process.env.NODE_ENV ?? 'development').trim();
+  const allowed = (process.env.SEED_ALLOW_PRODUCTION ?? '').trim().toLowerCase();
+  const remote = isRemoteDatabaseUrl(databaseUrl);
+
+  if ((remote || nodeEnv === 'production') && allowed !== 'true') {
+    console.error(
+      `[seed] refusing to seed a production database (${describeDatabaseTarget(databaseUrl)}). ` +
+        'Set SEED_ALLOW_PRODUCTION=true to override this guard.',
+    );
+    process.exit(1);
+  }
 }
 
 /**
@@ -92,22 +128,12 @@ function loadAllQuestions(): FrontendQuestion[] {
   return all;
 }
 
-function seed(): void {
-  const databaseUrl = process.env.DATABASE_URL ?? './data/devcode.sqlite';
-  const file = resolve(process.cwd(), databaseUrl);
-  mkdirSync(dirname(file), { recursive: true });
-
-  const sqlite = new Database(file);
-  sqlite.pragma('journal_mode = WAL');
-  sqlite.pragma('foreign_keys = ON');
-
-  const db = drizzle(sqlite, { schema: { questions } });
-
+async function seed(): Promise<void> {
+  console.log(`[seed] target database: ${databaseTarget}`);
   console.log('[seed] Loading question bank...');
   const questionBank = loadAllQuestions();
   console.log(`[seed] Loaded ${questionBank.length} questions from frontend bank`);
-
-  const existing = db.select().from(questions).all();
+  const existing = await db.select().from(questions);
   const existingBySlug = new Map(existing.map((row) => [row.slug, row]));
 
   const toInsert = questionBank.filter((question) => !existingBySlug.has(question.id));
@@ -124,7 +150,8 @@ function seed(): void {
     const batchSize = 100;
     for (let index = 0; index < toInsert.length; index += batchSize) {
       const batch = toInsert.slice(index, index + batchSize);
-      db.insert(questions)
+      await db
+        .insert(questions)
         .values(
           batch.map((question) => ({
             slug: question.id,
@@ -136,21 +163,39 @@ function seed(): void {
             explanation: question.explanation,
             focusArea: question.focusArea,
           })),
-        )
-        .run();
+        );
       console.log(`[seed] Inserted ${Math.min(index + batchSize, toInsert.length)}/${toInsert.length}`);
     }
   }
 
   for (const question of toBackfill) {
-    db.update(questions)
+    await db
+      .update(questions)
       .set({ focusArea: question.focusArea })
-      .where(eq(questions.slug, question.id))
-      .run();
+      .where(eq(questions.slug, question.id));
   }
 
   console.log('[seed] Seeding complete!');
-  sqlite.close();
 }
 
-seed();
+/**
+ * The database this script writes to.
+ *
+ * The seed is an operator tool, not the server: it reads `DATABASE_URL` and
+ * `DATABASE_AUTH_TOKEN` straight from the environment, so it can be run
+ * against a remote database without also supplying an unrelated server
+ * secret such as `JWT_SECRET`.
+ */
+const databaseUrl = process.env.DATABASE_URL ?? './data/devcode.sqlite';
+const authToken = process.env.DATABASE_AUTH_TOKEN;
+const databaseTarget = describeDatabaseTarget(databaseUrl);
+
+const client = createDatabaseClient(databaseUrl, authToken);
+const db = drizzle(client, { schema: { questions } });
+
+assertSeedAllowed(databaseUrl);
+try {
+  await seed();
+} finally {
+  client.close();
+}

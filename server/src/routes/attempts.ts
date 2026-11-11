@@ -3,6 +3,7 @@ import { requireAuth } from '../auth/middleware.js';
 import { CoachError } from '../coach/errors.js';
 import { attempts, questions, type NewAttempt } from '../db/schema.js';
 import { db } from '../db/client.js';
+import { isUniqueViolation } from '../db/errors.js';
 import { and, eq } from 'drizzle-orm';
 import { CoachAttemptsSchema } from './schemas.js';
 
@@ -23,7 +24,11 @@ attemptsRouter.post('/', requireAuth, async (req, res, next) => {
     const resolved: Array<{ questionId: string; attempt: NewAttempt }> = [];
 
     for (const q of attemptQuestions) {
-      const question = db.select().from(questions).where(eq(questions.slug, q.questionId)).get();
+      const question = await db
+        .select()
+        .from(questions)
+        .where(eq(questions.slug, q.questionId))
+        .get();
 
       if (!question) {
         throw new CoachError(`Question not found: ${q.questionId}`, 404);
@@ -55,13 +60,13 @@ attemptsRouter.post('/', requireAuth, async (req, res, next) => {
     let inserted: Array<typeof attempts.$inferSelect> = [];
 
     try {
-      inserted = db.transaction((tx) =>
-        tx.insert(attempts).values(resolved.map((entry) => entry.attempt)).returning().all(),
+      inserted = await db.transaction(async (tx) =>
+        tx.insert(attempts).values(resolved.map((entry) => entry.attempt)).returning(),
       );
     } catch (error) {
       if (isUniqueViolation(error)) {
         // Report the first question that was already submitted for this quiz.
-        const duplicate = findDuplicate(userId, attemptId, resolved);
+        const duplicate = await findDuplicate(userId, attemptId, resolved);
         throw new CoachError(
           `You have already submitted an answer for question: ${duplicate}`,
           409,
@@ -83,28 +88,19 @@ attemptsRouter.post('/', requireAuth, async (req, res, next) => {
   }
 });
 
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE'
-  );
-}
-
 /** Finds the question slug that already exists for this user + quiz run. */
-function findDuplicate(
+async function findDuplicate(
   userId: number,
   attemptId: string,
   resolved: Array<{ questionId: string }>,
-): string {
-  const existing = db
+): Promise<string> {
+  const rows = await db
     .select({ slug: questions.slug })
     .from(attempts)
     .innerJoin(questions, eq(attempts.questionId, questions.id))
-    .where(and(eq(attempts.quizId, attemptId), eq(attempts.userId, userId)))
-    .all()
-    .map((row) => row.slug);
+    .where(and(eq(attempts.quizId, attemptId), eq(attempts.userId, userId)));
+
+  const existing = rows.map((row) => row.slug);
 
   for (const entry of resolved) {
     if (existing.includes(entry.questionId)) return entry.questionId;

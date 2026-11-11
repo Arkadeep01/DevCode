@@ -2,9 +2,10 @@ import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
-import { db, sqlite } from '../src/db/client.js';
+import { db } from '../src/db/client.js';
 import { questions, users } from '../src/db/schema.js';
 import { CoachProviderError, CoachProviderUnavailableError } from '../src/coach/errors.js';
+import { execute } from './helpers/sql.js';
 
 /**
  * The provider is injected through the factory so the tests can simulate
@@ -36,12 +37,12 @@ async function registerUser(prefix: string): Promise<{ token: string; id: number
   });
 
   expect(response.status).toBe(201);
-  const id = db.select({ id: users.id }).from(users).where(eq(users.email, email)).get()?.id;
+  const id = (await db.select({ id: users.id }).from(users).where(eq(users.email, email)).get())?.id;
   return { token: response.body.token, id: id ?? 0 };
 }
 
-function seedQuestion(slug: string, focusArea = 'Focus Area: Two Sum Hash Map Linear Scan') {
-  return db
+async function seedQuestion(slug: string, focusArea = 'Focus Area: Two Sum Hash Map Linear Scan') {
+  const [row] = await db
     .insert(questions)
     .values({
       slug,
@@ -53,8 +54,9 @@ function seedQuestion(slug: string, focusArea = 'Focus Area: Two Sum Hash Map Li
       explanation: 'In-Order traversal visits nodes in ascending order.',
       focusArea,
     })
-    .returning()
-    .get();
+    .returning();
+
+  return row;
 }
 
 const VALID_PROVIDER_OUTPUT = {
@@ -84,14 +86,14 @@ const VALID_PROVIDER_OUTPUT = {
   ],
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   providerState.generate.mockReset();
   providerState.calls = 0;
-  sqlite.prepare('DELETE FROM attempts').run();
-  sqlite.prepare('DELETE FROM submissions').run();
-  sqlite.prepare('DELETE FROM progress').run();
-  sqlite.prepare('DELETE FROM questions').run();
-  sqlite.prepare('DELETE FROM users').run();
+  await execute('DELETE FROM attempts');
+  await execute('DELETE FROM submissions');
+  await execute('DELETE FROM progress');
+  await execute('DELETE FROM questions');
+  await execute('DELETE FROM users');
 });
 
 describe('POST /api/coach — security and failure handling', () => {
@@ -275,7 +277,7 @@ describe('POST /api/coach — security and failure handling', () => {
       explanations: [],
     });
     const user = await registerUser('canonical');
-    const question = seedQuestion('coach-sec-1');
+    const question = await seedQuestion('coach-sec-1');
 
     // The client claims the answer was correct; the server must not trust it.
     const response = await request(app)

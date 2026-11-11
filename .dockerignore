@@ -1,0 +1,36 @@
+# Dependencies and build output are installed inside the image.
+node_modules
+**/node_modules
+dist
+**/dist
+server/data
+server/backups
+
+# Secrets and local configuration never belong in the build context.
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Version control and tooling
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Logs, caches and coverage
+*.log
+coverage
+.cache
+.vite
+.turbo
+**/*.tsbuildinfo
+
+# Documentation and assets that are not needed at runtime
+AUDIT.md
+docs
+*.md
+!server/package.json

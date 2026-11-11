@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
-import { sqlite } from '../src/db/client.js';
+import { execute, queryOne } from './helpers/sql.js';
 
 const app = createApp();
 
@@ -17,30 +17,32 @@ async function registerCoachUser(): Promise<string> {
   return response.body.token;
 }
 
-function seedCoachQuestion(slug: string): { id: number; slug: string } {
-  return sqlite
-    .prepare(`
+async function seedCoachQuestion(slug: string): Promise<{ id: number; slug: string }> {
+  const row = await queryOne<{ id: number; slug: string }>(
+    `
     INSERT INTO questions (slug, category, difficulty, prompt, options, correct_index, explanation)
     VALUES (?, ?, ?, ?, ?, ?, ?)
     RETURNING id, slug
-  `)
-    .get(
-      slug,
-      'dsa',
-      'Intermediate',
-      'What is the main use of recursion?',
-      JSON.stringify(['Option 1', 'Option 2', 'Option 3', 'Option 4']),
-      0,
-      'Mock explanation',
-    ) as { id: number; slug: string };
+  `,
+    slug,
+    'dsa',
+    'Intermediate',
+    'What is the main use of recursion?',
+    JSON.stringify(['Option 1', 'Option 2', 'Option 3', 'Option 4']),
+    0,
+    'Mock explanation',
+  );
+
+  if (!row) throw new Error('failed to seed the question');
+  return row;
 }
 
-beforeEach(() => {
-  sqlite.prepare('DELETE FROM attempts').run();
-  sqlite.prepare('DELETE FROM submissions').run();
-  sqlite.prepare('DELETE FROM progress').run();
-  sqlite.prepare('DELETE FROM questions').run();
-  sqlite.prepare('DELETE FROM users').run();
+beforeEach(async () => {
+  await execute('DELETE FROM attempts');
+  await execute('DELETE FROM submissions');
+  await execute('DELETE FROM progress');
+  await execute('DELETE FROM questions');
+  await execute('DELETE FROM users');
 });
 
 describe('POST /api/attempts', () => {
@@ -82,7 +84,7 @@ describe('POST /api/attempts', () => {
 
   it('returns 409 when attempting to duplicate a question submission', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('dsa-b1');
+    const question = await seedCoachQuestion('dsa-b1');
 
     const response1 = await request(app)
       .post('/api/attempts')
@@ -108,7 +110,7 @@ describe('POST /api/attempts', () => {
 
   it('returns 201 when creating a new attempt successfully', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('dsa-b1');
+    const question = await seedCoachQuestion('dsa-b1');
 
     const response = await request(app)
       .post('/api/attempts')
@@ -124,9 +126,17 @@ describe('POST /api/attempts', () => {
     expect(response.body.skipped).toBe(0);
     expect(response.body.attemptId).toBe('attempt-1');
 
-    const row = sqlite
-      .prepare('SELECT * FROM attempts WHERE user_id = (SELECT id FROM users)')
-      .get() as {
+    const row = (await queryOne<{
+      user_id: number;
+      quiz_id: string;
+      question_id: number;
+      chosen_answer: number;
+      correct_answer: number;
+      is_correct: number;
+      is_skipped: number;
+    }>(
+      'SELECT * FROM attempts WHERE user_id = (SELECT id FROM users)',
+    )) as {
       user_id: number;
       quiz_id: string;
       question_id: number;
@@ -146,7 +156,7 @@ describe('POST /api/attempts', () => {
 
   it('handles skipped questions correctly', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('dsa-b1');
+    const question = await seedCoachQuestion('dsa-b1');
 
     const response = await request(app)
       .post('/api/attempts')
@@ -161,16 +171,16 @@ describe('POST /api/attempts', () => {
     expect(response.body.created).toBe(0);
     expect(response.body.skipped).toBe(1);
 
-    const row = sqlite
-      .prepare('SELECT * FROM attempts WHERE user_id = (SELECT id FROM users) AND is_skipped = 1')
-      .get() as { is_skipped: number; is_correct: number };
+    const row = (await queryOne<{ is_skipped: number; is_correct: number }>(
+      'SELECT * FROM attempts WHERE user_id = (SELECT id FROM users) AND is_skipped = 1',
+    )) as { is_skipped: number; is_correct: number };
     expect(row.is_skipped).toBe(1);
     expect(row.is_correct).toBe(0);
   });
 
   it('rejects duplicate question IDs in a single request', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('dsa-b1');
+    const question = await seedCoachQuestion('dsa-b1');
 
     const response = await request(app)
       .post('/api/attempts')
@@ -189,21 +199,18 @@ describe('POST /api/attempts', () => {
 
   it('persists the canonical focus area of the question', async () => {
     const token = await registerCoachUser();
-    sqlite
-      .prepare(
-        `INSERT INTO questions (slug, category, difficulty, prompt, options, correct_index, explanation, focus_area)
+    await execute(
+      `INSERT INTO questions (slug, category, difficulty, prompt, options, correct_index, explanation, focus_area)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .run(
-        'dsa-focus',
-        'dsa',
-        'Intermediate',
-        'Which traversal is in-order?',
-        JSON.stringify(['In-Order', 'Pre-Order', 'Post-Order', 'Level-Order']),
-        0,
-        'Mock explanation',
-        'Focus Area: Binary Search Tree In-Order Traversal',
-      );
+      'dsa-focus',
+      'dsa',
+      'Intermediate',
+      'Which traversal is in-order?',
+      JSON.stringify(['In-Order', 'Pre-Order', 'Post-Order', 'Level-Order']),
+      0,
+      'Mock explanation',
+      'Focus Area: Binary Search Tree In-Order Traversal',
+    );
 
     const response = await request(app)
       .post('/api/attempts')
@@ -215,9 +222,9 @@ describe('POST /api/attempts', () => {
 
     expect(response.status).toBe(201);
 
-    const row = sqlite
-      .prepare('SELECT focus_area, track, is_correct FROM attempts LIMIT 1')
-      .get() as { focus_area: string; track: string; is_correct: number };
+    const row = (await queryOne<{ focus_area: string; track: string; is_correct: number }>(
+      'SELECT focus_area, track, is_correct FROM attempts LIMIT 1',
+    )) as { focus_area: string; track: string; is_correct: number };
     expect(row.focus_area).toBe('Focus Area: Binary Search Tree In-Order Traversal');
     expect(row.track).toBe('dsa');
     expect(row.is_correct).toBe(0);
@@ -225,7 +232,7 @@ describe('POST /api/attempts', () => {
 
   it('persists nothing when one question in the batch is unknown', async () => {
     const token = await registerCoachUser();
-    const question = seedCoachQuestion('dsa-valid');
+    const question = await seedCoachQuestion('dsa-valid');
 
     const response = await request(app)
       .post('/api/attempts')
@@ -240,14 +247,14 @@ describe('POST /api/attempts', () => {
 
     expect(response.status).toBe(404);
 
-    const count = sqlite.prepare('SELECT COUNT(*) AS total FROM attempts').get() as { total: number };
-    expect(count.total).toBe(0);
+    const count = await queryOne<{ total: number }>('SELECT COUNT(*) AS total FROM attempts');
+    expect(count?.total).toBe(0);
   });
 
   it('keeps attempts separate per user', async () => {
     const firstToken = await registerCoachUser();
     const secondToken = await registerCoachUser();
-    const question = seedCoachQuestion('dsa-shared');
+    const question = await seedCoachQuestion('dsa-shared');
 
     await request(app)
       .post('/api/attempts')
@@ -267,7 +274,7 @@ describe('POST /api/attempts', () => {
 
     // The same quiz id from another user is a different attempt.
     expect(response.status).toBe(201);
-    const count = sqlite.prepare('SELECT COUNT(*) AS total FROM attempts').get() as { total: number };
-    expect(count.total).toBe(2);
+    const count = await queryOne<{ total: number }>('SELECT COUNT(*) AS total FROM attempts');
+    expect(count?.total).toBe(2);
   });
 });
