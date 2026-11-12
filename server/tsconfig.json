@@ -4,6 +4,13 @@
     "lib": ["ES2023"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    // This package is ESM only ("type": "module"), so dual packages such as
+    // helmet and bcryptjs must always be resolved through their ESM entry
+    // point. Without this, a compiler that resolves modules in CommonJS mode
+    // picks their CommonJS declaration, where a default import binds to
+    // `module.exports` instead of the exported function — the build then
+    // fails with "TS2349: This expression is not callable".
+    "customConditions": ["import"],
     "types": ["node"],
     "rootDir": "src",
     "outDir": "dist",

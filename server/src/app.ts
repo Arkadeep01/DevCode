@@ -1,12 +1,12 @@
 import cors from 'cors';
-import express, {
-  type NextFunction,
-  type Request,
-  type RequestHandler,
-  type Response,
-} from 'express';
-import * as helmetModule from 'helmet';
-import type { HelmetOptions } from 'helmet';
+import express, { type NextFunction, type Request, type Response } from 'express';
+/**
+ * helmet ships an ESM and a CommonJS declaration. The `customConditions`
+ * entry in `tsconfig.json` pins the ESM one for this ESM-only package, so
+ * the default import is the middleware factory in every module resolution
+ * mode — including the CommonJS mode some build tools use.
+ */
+import helmet from 'helmet';
 import { readFileSync } from 'node:fs';
 import { allowedOrigins, env, isProduction } from './config/env.js';
 import { staticEnabled, staticIndex, staticRoot } from './config/static.js';
@@ -17,31 +17,6 @@ import { authRouter } from './routes/auth.js';
 import { attemptsRouter } from './routes/attempts.js';
 import { createRateLimiter } from './middleware/rateLimit.js';
 import { createRequestLogger } from './middleware/requestLogger.js';
-
-/**
- * The shape of helmet's default export: a factory that takes the helmet
- * options and returns an Express middleware.
- */
-type HelmetFactory = (options?: Readonly<HelmetOptions>) => RequestHandler;
-
-/**
- * helmet's middleware factory (the package's default export).
- *
- * helmet ships two declaration files: an ESM one (`index.d.mts`) and a
- * CommonJS one (`index.d.cts`). Which one a compiler picks depends on the
- * module resolution mode it uses: the project's own `tsc` run resolves the
- * ESM entry point, while the hosting platform's build resolves the CommonJS
- * one. When an ES module imports a CommonJS module, TypeScript binds the
- * default import to `module.exports` — the whole namespace — so
- * `helmet(...)` stops being callable and the build fails with
- * "TS2349: This expression is not callable".
- *
- * At runtime the factory is always the `default` property of the module
- * (the CommonJS entry even sets `module.exports.default = module.exports`),
- * so it is read from there and typed explicitly. That keeps the import valid
- * under every resolution mode the code is compiled with.
- */
-const helmet = helmetModule.default as unknown as HelmetFactory;
 
 /** Attempt-submission throttling, keyed by the authenticated user. */
 const attemptRateLimiter = createRateLimiter({

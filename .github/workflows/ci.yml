@@ -64,6 +64,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Platform type check
+        # The hosting platform type-checks the API itself and resolves modules
+        # in CommonJS mode. This reproduces that resolution, so a package that
+        # would resolve to its CommonJS declaration fails the build here first.
+        run: npm run typecheck:platform
+
       - name: Lint
         run: npm run lint
 
