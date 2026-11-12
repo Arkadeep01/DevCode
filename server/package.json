@@ -12,6 +12,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/local-server.js",
     "typecheck": "tsc -p tsconfig.test.json",
+    "typecheck:platform": "node scripts/check-platform-types.cjs",
     "test": "vitest run",
     "lint": "eslint src test",
     "format": "prettier --write .",
