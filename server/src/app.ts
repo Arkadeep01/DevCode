@@ -1,6 +1,6 @@
 import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
-import helmet from 'helmet';
+import helmet from "helmet";
 import { readFileSync } from 'node:fs';
 import { allowedOrigins, env, isProduction } from './config/env.js';
 import { staticEnabled, staticIndex, staticRoot } from './config/static.js';
